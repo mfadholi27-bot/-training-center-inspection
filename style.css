@@ -18,3 +18,11 @@
 @media(min-width:650px){.app-shell{padding-left:28px;padding-right:28px}.stats-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.quick-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.hero-card{padding:32px}.hero-content{max-width:58%}.record-list{grid-template-columns:repeat(2,minmax(0,1fr))}.form-card{max-width:700px}}
 @media(max-width:370px){.app-shell{padding-left:12px;padding-right:12px}.topbar{gap:8px}.brand h1{font-size:12px}.brand-mark{width:36px;height:36px}.live-badge{font-size:8px;padding:7px}.hero-card{padding:20px 17px}.hero-content{max-width:82%}.stat-card{padding:13px 11px}.stat-card strong{font-size:25px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.ambient{display:none}}
+
+
+/* v1.1 inventory enhancements */
+.filter-label{display:flex;flex-direction:column;gap:8px;margin:12px 0 18px;color:var(--muted,#aab2c5);font-size:.88rem}
+.filter-label select{width:100%;min-height:46px;border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:10px 12px;background:rgba(10,15,31,.82);color:inherit;font:inherit}
+.condition-history{margin:12px 0;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.025)}
+.condition-history summary{cursor:pointer;font-size:.88rem;font-weight:600}
+.condition-history .record-meta{margin:8px 0 0;line-height:1.5}

@@ -26,3 +26,15 @@ Aplikasi web ringan dengan tema Dark Animated Glassmorphism untuk pencatatan rua
 - Untuk impor backup, data dengan ID yang sama diperbarui; data lainnya dipertahankan.
 - Jangan masukkan informasi rahasia perusahaan atau data pribadi sensitif tanpa persetujuan dan kebijakan internal yang sesuai.
 - Ini starter app untuk diuji; sesuaikan proses dan format laporan dengan standar perusahaan sebelum penggunaan resmi.
+
+
+## Versi 1.1 — peningkatan inventaris
+- Kategori inventaris.
+- Kode barang otomatis saat kolom kode dikosongkan; kode manual yang duplikat ditolak.
+- Pencarian berdasarkan nama, kode, kategori, dan ruangan.
+- Filter kondisi barang.
+- Riwayat perubahan kondisi dengan waktu.
+- Ekspor CSV mencakup kategori.
+- Data inventaris versi lama tetap dapat ditampilkan; kategori lama akan ditampilkan sebagai “Lainnya”.
+
+Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipublikasikan. Unggah isi ZIP ini ke branch `development-v1.1`, lalu uji sebelum digabungkan ke `main`.
