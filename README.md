@@ -77,3 +77,7 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Foto JPG/PNG/GIF yang tersimpan pada catatan pemeriksaan ditempatkan pada lembar `Dokumentasi Foto`.
 - ExcelJS dan SheetJS dimuat saat diperlukan melalui CDN; untuk ekspor foto, koneksi internet diperlukan ketika pustaka belum pernah dimuat.
 - Nama file memakai nama pemeriksa dan tanggal ekspor. Jika belum ada foto tersimpan, file tetap diekspor tanpa gambar dan menampilkan pemberitahuan.
+
+
+## Perbaikan v1.6.1
+- Memperbaiki error ekspor `Cannot read properties of undefined (reading 'id')` dengan menghapus upaya menghapus worksheet yang belum dibuat pada workbook ExcelJS yang baru.

@@ -192,8 +192,8 @@ async function exportXlsxWithPhotos() {
       s.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,rows.length+1),column:Math.max(1,Object.keys(rows[0]||{}).length)}};
       return s;
     };
-    ew.removeWorksheet(ew.getWorksheet("Inventaris").id);
-    // Rebuild all sheets with ExcelJS so images and formatting share a single valid package.
+    // Start with a fresh workbook and add all worksheets through ExcelJS.
+    // Do not remove a worksheet here: a new workbook has no "Inventaris" sheet yet.
     addSheet("Inventaris",itemRows,[7,18,28,20,24,18,38,24]);
     addSheet("Ruangan",roomRows,[7,28,26,14,38,24]);
     addSheet("Riwayat Pemeriksaan",inspectionRows,[7,24,22,24,24,18,40,18]);
