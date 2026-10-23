@@ -45,3 +45,22 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Ikon profil diperbaiki agar simetris dengan ukuran dan garis yang konsisten.
 - Versi cache service worker diperbarui agar browser mengambil tampilan terbaru.
 - `icon.svg` tetap berada di direktori utama karena `index.html` dan `manifest.json` merujuk ke `./icon.svg`.
+
+
+## Pembaruan v1.3.0
+- Ekspor lembar kerja Excel-kompatibel (.xls) dengan tiga lembar: Inventaris, Ruangan, dan Riwayat Pemeriksaan.
+- Header kolom seragam, lebar kolom diatur, teks panjang dibungkus, dan header dibekukan untuk memudahkan salin-tempel ke master.
+- Ekspor arsip foto terpisah dalam JSON yang menyertakan data foto dan metadata pemeriksaan. Arsip foto ini bukan ZIP gambar; foto disimpan sebagai data URL/base64 agar ekspor tetap bisa bekerja offline tanpa pustaka tambahan.
+
+
+## Pembaruan v1.4.0
+- Nama file ekspor Excel otomatis mengikuti nama pemeriksa aktif dan tanggal ekspor, contoh `Training-Center_Amak_Fadholi_2026-10-23.xls`.
+- Nama arsip foto otomatis mengikuti pola `Arsip-Foto_Amak_Fadholi_2026-10-23.json`.
+- Nama file dibersihkan dari karakter yang tidak aman untuk nama file. Pastikan nama pemeriksa sudah diatur di profil sebelum mengekspor.
+
+
+## Pembaruan v1.5.0
+- Ekspor utama menghasilkan file Excel asli `.xlsx` (bukan CSV atau XML ber-ekstensi XLS).
+- Foto pemeriksaan tertanam langsung pada lembar `Dokumentasi Foto` bersama metadata tanggal, pemeriksa, ruangan, jenis, hasil, dan catatan.
+- Nama file otomatis memakai nama pemeriksa dan tanggal ekspor.
+- Ekspor arsip foto JSON tetap tersedia sebagai cadangan opsional.

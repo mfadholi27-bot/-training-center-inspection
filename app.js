@@ -87,7 +87,176 @@ $("#profileForm").addEventListener("submit",e=>{e.preventDefault();applyName($("
 function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 $("#exportBackup").addEventListener("click",async()=>{try{const data=await TCDB.snapshot();download("backup-training-center-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(data,null,2),"application/json");toast("Backup berhasil dibuat.")}catch(e){toast("Backup gagal dibuat.")}});
 $("#importBackup").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data||!Array.isArray(data.rooms)||!Array.isArray(data.items)||!Array.isArray(data.inspections))throw new Error("Format backup tidak cocok");if(!confirm("Impor data backup? Data dengan ID sama akan diperbarui."))return;await TCDB.mergeBackup(data);if(data.settings?.name)applyName(data.settings.name);await refresh();toast("Backup berhasil dipulihkan.")}catch(err){toast("Backup tidak valid atau gagal dibaca.")}finally{e.target.value=""}});
-$("#exportCsv").addEventListener("click",async()=>{const [items,rooms]=await Promise.all([TCDB.all("items"),TCDB.all("rooms")]),map=new Map(rooms.map(r=>[r.id,r.name]));const cell=v=>'"'+String(v??"").replace(/"/g,'""')+'"';const rows=[["Nama Barang","Kode","Kategori","Ruangan","Kondisi","Catatan"],...items.map(i=>[i.name,i.code,i.category||"Lainnya",map.get(i.roomId)||"",i.condition,i.note])];download("inventaris-training-center.csv","\ufeff"+rows.map(r=>r.map(cell).join(",")).join("\r\n"),"text/csv;charset=utf-8");toast("CSV berhasil diekspor.")});
+function safeFilePart(value) {
+  return String(value || "Pemeriksa")
+    .normalize("NFD").replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0,60) || "Pemeriksa";
+}
+function exportInspectorName() {
+  return ($("#profileName")?.value || localStorage.getItem("tc-inspector-name") || $("#inspectorName")?.value || "Pemeriksa").trim() || "Pemeriksa";
+}
+function exportDateStamp() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function safeFilePart(value) {
+  return String(value || "Pemeriksa")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0,60) || "Pemeriksa";
+}
+function exportInspectorName() {
+  return ($("#profileName")?.value || localStorage.getItem("tc-inspector-name") || $("#inspectorName")?.value || "Pemeriksa").trim() || "Pemeriksa";
+}
+function exportDateStamp() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function xlsxEscape(value) {
+  return String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function xlsxCol(n) {
+  let s="";
+  while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}
+  return s;
+}
+function makeWorksheetXml(headers, rows, widths, rowHeights={}) {
+  const all = [headers, ...rows];
+  const cols = widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
+  const sheetRows = all.map((row,ri)=>{
+    const cells = row.map((v,ci)=>{
+      const ref = `${xlsxCol(ci+1)}${ri+1}`;
+      const style = ri===0 ? 1 : 2;
+      const val = xlsxEscape(v);
+      return `<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${val}</t></is></c>`;
+    }).join("");
+    const height = rowHeights[ri+1] ? ` ht="${rowHeights[ri+1]}" customHeight="1"` : "";
+    return `<row r="${ri+1}"${height}>${cells}</row>`;
+  }).join("");
+  const lastCol=xlsxCol(headers.length), lastRow=all.length;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1:${lastCol}${lastRow}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${sheetRows}</sheetData><autoFilter ref="A1:${lastCol}${lastRow}"/></worksheet>`;
+}
+function crc32(bytes) {
+  let c=-1;
+  for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xEDB88320:0);}
+  return (c^-1)>>>0;
+}
+function zipStore(files) {
+  const enc=new TextEncoder(), locals=[], centrals=[];
+  let offset=0;
+  const u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
+  for(const file of files){
+    const name=enc.encode(file.name), data=typeof file.data==="string"?enc.encode(file.data):file.data;
+    const crc=crc32(data);
+    const local=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name,...data]);
+    locals.push(local);
+    const central=new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]);
+    centrals.push(central);
+    offset+=local.length;
+  }
+  const centralSize=centrals.reduce((n,a)=>n+a.length,0);
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(centralSize),...u32(offset),...u16(0)]);
+  const total=offset+centralSize+end.length, out=new Uint8Array(total);
+  let p=0; for(const a of locals){out.set(a,p);p+=a.length;} for(const a of centrals){out.set(a,p);p+=a.length;} out.set(end,p);
+  return out;
+}
+function dataUrlToBytes(dataUrl) {
+  const b64=dataUrl.split(",")[1]||"";
+  const bin=atob(b64), out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+  return out;
+}
+function imageExt(dataUrl) {
+  return dataUrl.startsWith("data:image/png") ? "png" : dataUrl.startsWith("data:image/webp") ? "webp" : "jpg";
+}
+function worksheetPhotoXml(headers, rows, imageRefs) {
+  // Photo sheet includes a photo filename/reference and metadata. Actual image drawing parts are added below.
+  const enc=new TextEncoder();
+  const sheetDataRows=[headers,...rows].map((row,ri)=>{
+    const cells=row.map((v,ci)=>{
+      const ref=`${xlsxCol(ci+1)}${ri+1}`;
+      return `<c r="${ref}" s="${ri===0?1:2}" t="inlineStr"><is><t xml:space="preserve">${xlsxEscape(v)}</t></is></c>`;
+    }).join("");
+    return `<row r="${ri+1}"${ri>0&&imageRefs[ri-1]?' ht="105" customHeight="1"':""}>${cells}</row>`;
+  }).join("");
+  const drawingRel=imageRefs.length?'<drawing r:id="rId1"/>':"";
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetData>${sheetDataRows}</sheetData><autoFilter ref="A1:${xlsxCol(headers.length)}${headers.length+rows.length}"/>${drawingRel}</worksheet>`;
+}
+async function exportXlsxWithPhotos() {
+  const [items,rooms,inspections]=await Promise.all([TCDB.all("items"),TCDB.all("rooms"),TCDB.all("inspections")]);
+  const roomMap=new Map(rooms.map(r=>[r.id,r]));
+  const roomName=id=>roomMap.get(id)?.name||"";
+  const dateText=v=>v?new Date(v).toLocaleString("id-ID"):"";
+  const itemRows=items.map((i,n)=>[n+1,i.code||"",i.name||"",i.category||"Lainnya",roomName(i.roomId),i.condition||"",i.note||"",dateText(i.updatedAt||i.createdAt)]);
+  const roomRows=rooms.map((r,n)=>[n+1,r.name||"",r.building||"",r.floor||"",r.note||"",dateText(r.createdAt)]);
+  const inspectionRows=inspections.map((x,n)=>[n+1,dateText(x.createdAt),x.inspector||"",roomName(x.roomId),x.type||"",x.result||"",x.note||"",x.photo?"Tertanam di lembar Dokumentasi Foto":"Tidak ada"]);
+  const photoInspections=inspections.filter(x=>x.photo);
+  const photoRows=photoInspections.map((x,n)=>[n+1,dateText(x.createdAt),x.inspector||"",roomName(x.roomId),x.type||"",x.result||"",x.note||"",`Foto ${n+1}`]);
+  const files=[];
+  const add=(name,data)=>files.push({name,data});
+  add("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Default Extension="webp" ContentType="image/webp"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`);
+  add("_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
+  add("xl/workbook.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Inventaris" sheetId="1" r:id="rId1"/><sheet name="Ruangan" sheetId="2" r:id="rId2"/><sheet name="Riwayat Pemeriksaan" sheetId="3" r:id="rId3"/><sheet name="Dokumentasi Foto" sheetId="4" r:id="rId4"/></sheets></workbook>`);
+  add("xl/_rels/workbook.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/><Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  add("xl/styles.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="10"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF244A78"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border/><border><bottom style="thin"><color rgb="FFD9E2F3"/></bottom></border></borders><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs></styleSheet>`);
+  const photoSheetXml=worksheetPhotoXml(["No","Tanggal","Pemeriksa","Ruangan","Jenis Pemeriksaan","Hasil","Catatan","Foto"],photoRows,photoInspections);
+  add("xl/worksheets/sheet1.xml",makeWorksheetXml(["No","Kode Barang","Nama Barang","Kategori","Ruangan","Kondisi","Catatan","Terakhir Diperbarui"],itemRows,[7,18,28,20,24,18,38,24]));
+  add("xl/worksheets/sheet2.xml",makeWorksheetXml(["No","Nama Ruangan","Gedung / Lokasi","Lantai","Catatan","Tanggal Dibuat"],roomRows,[7,28,26,14,38,24]));
+  add("xl/worksheets/sheet3.xml",makeWorksheetXml(["No","Tanggal & Waktu","Pemeriksa","Ruangan","Jenis Pemeriksaan","Hasil","Catatan Temuan","Dokumentasi Foto"],inspectionRows,[7,24,22,24,24,18,40,28]));
+  add("xl/worksheets/sheet4.xml",photoSheetXml);
+  const drawingParts=[], drawingRels=[];
+  if(photoInspections.length){
+    const imageAnchors=[];
+    for(let i=0;i<photoInspections.length;i++){
+      const photo=photoInspections[i].photo;
+      const ext=imageExt(photo), imageName=`image${i+1}.${ext}`;
+      add(`xl/media/${imageName}`,dataUrlToBytes(photo));
+      const col=7,row=i+1;
+      imageAnchors.push(`<xdr:twoCellAnchor editAs="oneCell"><xdr:from><xdr:col>${col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${row}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>${col+1}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${row+1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${i+1}" name="Foto ${i+1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${i+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`);
+      drawingRels.push(`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${imageName}"/>`);
+    }
+    add("xl/worksheets/_rels/sheet4.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>`);
+    add("xl/drawings/drawing1.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${imageAnchors.join("")}</xdr:wsDr>`);
+    add("xl/drawings/_rels/drawing1.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${drawingRels.join("")}</Relationships>`);
+    // Make the drawing relationship valid in worksheet XML.
+    const s4=files.find(f=>f.name==="xl/worksheets/sheet4.xml");
+    s4.data=s4.data.replace("</worksheet>",'<drawing xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1"/></worksheet>');
+    const ct=files.find(f=>f.name==="[Content_Types].xml");
+    ct.data=ct.data.replace("</Types>",'<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>');
+  }
+  const zip=zipStore(files);
+  const blob=new Blob([zip],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`Training-Center_${safeFilePart(exportInspectorName())}_${exportDateStamp()}.xlsx`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  toast(`Excel berhasil diekspor dengan ${photoInspections.length} foto tertanam.`);
+}
+$("#exportExcel").addEventListener("click",async()=>{
+  try { await exportXlsxWithPhotos(); }
+  catch(err) { console.error(err); toast("Gagal mengekspor Excel. Periksa ukuran dan format foto pemeriksaan."); }
+});
+$("#exportPhotos").addEventListener("click",async()=>{
+  try {
+    const [inspections,rooms]=await Promise.all([TCDB.all("inspections"),TCDB.all("rooms")]);
+    const roomMap=new Map(rooms.map(r=>[r.id,r.name]));
+    const photos=inspections.filter(x=>x.photo).map((x,n)=>({
+      namaFile:`foto-${String(x.id||n+1).replace(/[^a-zA-Z0-9_-]/g,"")}.jpg`,
+      tanggal:x.createdAt||"",
+      pemeriksa:x.inspector||"",
+      ruangan:roomMap.get(x.roomId)||"",
+      jenisPemeriksaan:x.type||"",
+      hasil:x.result||"",
+      catatan:x.note||"",
+      formatDataFoto:x.photo.startsWith("data:image/png")?"image/png":"image/jpeg",
+      dataFotoBase64:x.photo
+    }));
+    const archive={namaArsip:"Arsip Foto Training Center",versi:1,dibuatPada:new Date().toISOString(),jumlahFoto:photos.length,petunjuk:"Foto disimpan sebagai data URL/base64 agar dapat dicadangkan offline. Simpan file JSON ini bersama file Excel master.",foto:photos};
+    const pemeriksa = safeFilePart(exportInspectorName());
+    download(`Arsip-Foto_${pemeriksa}_${exportDateStamp()}.json`,JSON.stringify(archive,null,2),"application/json;charset=utf-8");
+    toast(photos.length?`Arsip ${photos.length} foto berhasil diekspor.`:"Belum ada foto pemeriksaan yang tersimpan.");
+  } catch(err) { console.error(err); toast("Gagal mengekspor arsip foto."); }
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").then(()=>$("#offlineStatus").textContent="Service Worker terpasang; buka aplikasi sekali saat online agar aset tercache.").catch(()=>$("#offlineStatus").textContent="Mode offline belum aktif di browser ini.");
 else $("#offlineStatus").textContent="Mode offline perlu HTTPS dan dukungan Service Worker. Data lokal dapat bekerja bila browser mendukung IndexedDB.";
 refresh().catch(console.error);
