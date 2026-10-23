@@ -29,3 +29,91 @@
 
 /* v1.2.0 balanced header controls */
 .icon-button{min-width:44px;min-height:44px;padding:0}.avatar{min-width:44px;min-height:44px;padding:0;overflow:hidden}.topbar{gap:12px}
+
+
+/* v1.7 professional, larger and balanced navigation icons */
+.bottom-nav{
+  padding:10px 7px 9px;
+  min-height:88px;
+  border-radius:27px;
+}
+.nav-item{
+  min-height:62px;
+  gap:6px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.1px;
+}
+.nav-icon{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+  line-height:1;
+}
+.nav-icon svg{
+  display:block;
+  width:29px;
+  height:29px;
+  stroke-width:1.9;
+}
+.nav-item.active .nav-icon svg{
+  stroke-width:2.15;
+}
+.nav-main{
+  transform:translateY(-12px);
+  gap:6px;
+}
+.nav-main-icon{
+  width:58px;
+  height:58px;
+  border-radius:20px;
+  box-shadow:0 9px 25px #648bff55,inset 0 1px 0 #ffffff40;
+}
+.nav-main-icon svg{
+  width:34px;
+  height:34px;
+  stroke-width:2.5;
+}
+.icon-button{
+  width:50px;
+  height:50px;
+  min-width:50px;
+  min-height:50px;
+  border-radius:17px;
+}
+.icon-button svg{
+  width:28px;
+  height:28px;
+  stroke-width:2.15;
+}
+.avatar{
+  width:50px;
+  height:50px;
+  min-width:50px;
+  min-height:50px;
+}
+.avatar svg{
+  width:29px;
+  height:29px;
+  stroke-width:1.9;
+}
+.brand-mark{
+  width:46px;
+  height:46px;
+  border-radius:15px;
+  font-size:19px;
+}
+.record-icon{
+  width:48px;
+  height:48px;
+  border-radius:16px;
+  font-size:24px;
+}
+@media (max-width:380px){
+  .bottom-nav{width:calc(100% - 16px);padding-left:4px;padding-right:4px}
+  .nav-item{font-size:10px}
+  .nav-icon svg{width:27px;height:27px}
+  .nav-main-icon{width:53px;height:53px}
+}

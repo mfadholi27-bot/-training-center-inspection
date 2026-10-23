@@ -81,3 +81,9 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 
 ## Perbaikan v1.6.1
 - Memperbaiki error ekspor `Cannot read properties of undefined (reading 'id')` dengan menghapus upaya menghapus worksheet yang belum dibuat pada workbook ExcelJS yang baru.
+
+
+## Pembaruan v1.7.0 — Ikon profesional
+- Mengganti ikon navigasi berbasis karakter menjadi ikon SVG yang konsisten untuk Beranda, Ruangan, Inspeksi, Barang, dan Riwayat.
+- Memperbesar ikon navigasi bawah, tombol menu, profil, dan penanda merek.
+- Merapikan ukuran ikon dan label agar lebih mudah digunakan pada layar ponsel.
