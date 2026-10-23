@@ -89,150 +89,160 @@ $("#exportBackup").addEventListener("click",async()=>{try{const data=await TCDB.
 $("#importBackup").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data||!Array.isArray(data.rooms)||!Array.isArray(data.items)||!Array.isArray(data.inspections))throw new Error("Format backup tidak cocok");if(!confirm("Impor data backup? Data dengan ID sama akan diperbarui."))return;await TCDB.mergeBackup(data);if(data.settings?.name)applyName(data.settings.name);await refresh();toast("Backup berhasil dipulihkan.")}catch(err){toast("Backup tidak valid atau gagal dibaca.")}finally{e.target.value=""}});
 function safeFilePart(value) {
   return String(value || "Pemeriksa")
-    .normalize("NFD").replace(/[\\u0300-\\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0,60) || "Pemeriksa";
-}
-function exportInspectorName() {
-  return ($("#profileName")?.value || localStorage.getItem("tc-inspector-name") || $("#inspectorName")?.value || "Pemeriksa").trim() || "Pemeriksa";
-}
-function exportDateStamp() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
-function safeFilePart(value) {
-  return String(value || "Pemeriksa")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0,60) || "Pemeriksa";
 }
 function exportInspectorName() {
-  return ($("#profileName")?.value || localStorage.getItem("tc-inspector-name") || $("#inspectorName")?.value || "Pemeriksa").trim() || "Pemeriksa";
+  return (localStorage.getItem("tc-inspector-name") || $("#profileName")?.value || $("#inspectorName")?.value || "Pemeriksa").trim() || "Pemeriksa";
 }
 function exportDateStamp() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
-function xlsxEscape(value) {
-  return String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-function xlsxCol(n) {
-  let s="";
-  while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}
-  return s;
-}
-function makeWorksheetXml(headers, rows, widths, rowHeights={}) {
-  const all = [headers, ...rows];
-  const cols = widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
-  const sheetRows = all.map((row,ri)=>{
-    const cells = row.map((v,ci)=>{
-      const ref = `${xlsxCol(ci+1)}${ri+1}`;
-      const style = ri===0 ? 1 : 2;
-      const val = xlsxEscape(v);
-      return `<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${val}</t></is></c>`;
-    }).join("");
-    const height = rowHeights[ri+1] ? ` ht="${rowHeights[ri+1]}" customHeight="1"` : "";
-    return `<row r="${ri+1}"${height}>${cells}</row>`;
-  }).join("");
-  const lastCol=xlsxCol(headers.length), lastRow=all.length;
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1:${lastCol}${lastRow}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${sheetRows}</sheetData><autoFilter ref="A1:${lastCol}${lastRow}"/></worksheet>`;
-}
-function crc32(bytes) {
-  let c=-1;
-  for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xEDB88320:0);}
-  return (c^-1)>>>0;
-}
-function zipStore(files) {
-  const enc=new TextEncoder(), locals=[], centrals=[];
-  let offset=0;
-  const u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
-  for(const file of files){
-    const name=enc.encode(file.name), data=typeof file.data==="string"?enc.encode(file.data):file.data;
-    const crc=crc32(data);
-    const local=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name,...data]);
-    locals.push(local);
-    const central=new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]);
-    centrals.push(central);
-    offset+=local.length;
+async function loadXLSXLibrary() {
+  if (window.XLSX) return window.XLSX;
+  if (!navigator.onLine) throw new Error("Pustaka Excel belum tersedia offline. Buka aplikasi saat online satu kali, lalu coba lagi.");
+  const sources = [
+    "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
+    "https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"
+  ];
+  for (const src of sources) {
+    try {
+      await new Promise((resolve,reject)=>{
+        const script=document.createElement("script");
+        script.src=src; script.async=true;
+        script.onload=resolve; script.onerror=()=>{script.remove();reject(new Error("Gagal memuat pustaka Excel"));};
+        document.head.appendChild(script);
+      });
+      if (window.XLSX) return window.XLSX;
+    } catch(e) { console.warn(e); }
   }
-  const centralSize=centrals.reduce((n,a)=>n+a.length,0);
-  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(centralSize),...u32(offset),...u16(0)]);
-  const total=offset+centralSize+end.length, out=new Uint8Array(total);
-  let p=0; for(const a of locals){out.set(a,p);p+=a.length;} for(const a of centrals){out.set(a,p);p+=a.length;} out.set(end,p);
-  return out;
+  throw new Error("Pustaka Excel tidak dapat dimuat. Periksa koneksi internet lalu coba lagi.");
 }
-function dataUrlToBytes(dataUrl) {
-  const b64=dataUrl.split(",")[1]||"";
-  const bin=atob(b64), out=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
-  return out;
+function dataUrlToBase64(dataUrl) {
+  return (String(dataUrl||"").split(",")[1] || "");
 }
-function imageExt(dataUrl) {
-  return dataUrl.startsWith("data:image/png") ? "png" : dataUrl.startsWith("data:image/webp") ? "webp" : "jpg";
-}
-function worksheetPhotoXml(headers, rows, imageRefs) {
-  // Photo sheet includes a photo filename/reference and metadata. Actual image drawing parts are added below.
-  const enc=new TextEncoder();
-  const sheetDataRows=[headers,...rows].map((row,ri)=>{
-    const cells=row.map((v,ci)=>{
-      const ref=`${xlsxCol(ci+1)}${ri+1}`;
-      return `<c r="${ref}" s="${ri===0?1:2}" t="inlineStr"><is><t xml:space="preserve">${xlsxEscape(v)}</t></is></c>`;
-    }).join("");
-    return `<row r="${ri+1}"${ri>0&&imageRefs[ri-1]?' ht="105" customHeight="1"':""}>${cells}</row>`;
-  }).join("");
-  const drawingRel=imageRefs.length?'<drawing r:id="rId1"/>':"";
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetData>${sheetDataRows}</sheetData><autoFilter ref="A1:${xlsxCol(headers.length)}${headers.length+rows.length}"/>${drawingRel}</worksheet>`;
+function photoDataUrlToMime(dataUrl) {
+  const m=String(dataUrl||"").match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+  return m ? m[1] : "image/jpeg";
 }
 async function exportXlsxWithPhotos() {
+  const XLSX = await loadXLSXLibrary();
   const [items,rooms,inspections]=await Promise.all([TCDB.all("items"),TCDB.all("rooms"),TCDB.all("inspections")]);
   const roomMap=new Map(rooms.map(r=>[r.id,r]));
   const roomName=id=>roomMap.get(id)?.name||"";
   const dateText=v=>v?new Date(v).toLocaleString("id-ID"):"";
-  const itemRows=items.map((i,n)=>[n+1,i.code||"",i.name||"",i.category||"Lainnya",roomName(i.roomId),i.condition||"",i.note||"",dateText(i.updatedAt||i.createdAt)]);
-  const roomRows=rooms.map((r,n)=>[n+1,r.name||"",r.building||"",r.floor||"",r.note||"",dateText(r.createdAt)]);
-  const inspectionRows=inspections.map((x,n)=>[n+1,dateText(x.createdAt),x.inspector||"",roomName(x.roomId),x.type||"",x.result||"",x.note||"",x.photo?"Tertanam di lembar Dokumentasi Foto":"Tidak ada"]);
+  const itemRows=items.map((i,n)=>({
+    "No":n+1,"Kode Barang":i.code||"","Nama Barang":i.name||"",
+    "Kategori":i.category||"Lainnya","Ruangan":roomName(i.roomId),
+    "Kondisi":i.condition||"","Catatan":i.note||"",
+    "Terakhir Diperbarui":dateText(i.updatedAt||i.createdAt)
+  }));
+  const roomRows=rooms.map((r,n)=>({
+    "No":n+1,"Nama Ruangan":r.name||"","Gedung / Lokasi":r.building||"",
+    "Lantai":r.floor||"","Catatan":r.note||"","Tanggal Dibuat":dateText(r.createdAt)
+  }));
+  const inspectionRows=inspections.map((x,n)=>({
+    "No":n+1,"Tanggal & Waktu":dateText(x.createdAt),"Pemeriksa":x.inspector||exportInspectorName(),
+    "Ruangan":roomName(x.roomId),"Jenis Pemeriksaan":x.type||"",
+    "Hasil":x.result||"","Catatan Temuan":x.note||"",
+    "Foto Tersedia":x.photo?"Ya":"Tidak"
+  }));
   const photoInspections=inspections.filter(x=>x.photo);
-  const photoRows=photoInspections.map((x,n)=>[n+1,dateText(x.createdAt),x.inspector||"",roomName(x.roomId),x.type||"",x.result||"",x.note||"",`Foto ${n+1}`]);
-  const files=[];
-  const add=(name,data)=>files.push({name,data});
-  add("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Default Extension="webp" ContentType="image/webp"/><Default Extension="webp" ContentType="image/webp"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`);
-  add("_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
-  add("xl/workbook.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Inventaris" sheetId="1" r:id="rId1"/><sheet name="Ruangan" sheetId="2" r:id="rId2"/><sheet name="Riwayat Pemeriksaan" sheetId="3" r:id="rId3"/><sheet name="Dokumentasi Foto" sheetId="4" r:id="rId4"/></sheets></workbook>`);
-  add("xl/_rels/workbook.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/><Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
-  add("xl/styles.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="10"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF244A78"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border/><border><bottom style="thin"><color rgb="FFD9E2F3"/></bottom></border></borders><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs></styleSheet>`);
-  const photoSheetXml=worksheetPhotoXml(["No","Tanggal","Pemeriksa","Ruangan","Jenis Pemeriksaan","Hasil","Catatan","Foto"],photoRows,photoInspections);
-  add("xl/worksheets/sheet1.xml",makeWorksheetXml(["No","Kode Barang","Nama Barang","Kategori","Ruangan","Kondisi","Catatan","Terakhir Diperbarui"],itemRows,[7,18,28,20,24,18,38,24]));
-  add("xl/worksheets/sheet2.xml",makeWorksheetXml(["No","Nama Ruangan","Gedung / Lokasi","Lantai","Catatan","Tanggal Dibuat"],roomRows,[7,28,26,14,38,24]));
-  add("xl/worksheets/sheet3.xml",makeWorksheetXml(["No","Tanggal & Waktu","Pemeriksa","Ruangan","Jenis Pemeriksaan","Hasil","Catatan Temuan","Dokumentasi Foto"],inspectionRows,[7,24,22,24,24,18,40,28]));
-  add("xl/worksheets/sheet4.xml",photoSheetXml);
-  const drawingParts=[], drawingRels=[];
-  if(photoInspections.length){
-    const imageAnchors=[];
-    for(let i=0;i<photoInspections.length;i++){
-      const photo=photoInspections[i].photo;
-      const ext=imageExt(photo), imageName=`image${i+1}.${ext}`;
-      add(`xl/media/${imageName}`,dataUrlToBytes(photo));
-      const col=7,row=i+1;
-      imageAnchors.push(`<xdr:twoCellAnchor editAs="oneCell"><xdr:from><xdr:col>${col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${row}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>${col+1}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${row+1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${i+1}" name="Foto ${i+1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${i+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`);
-      drawingRels.push(`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/${imageName}"/>`);
-    }
-    add("xl/worksheets/_rels/sheet4.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>`);
-    add("xl/drawings/drawing1.xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${imageAnchors.join("")}</xdr:wsDr>`);
-    add("xl/drawings/_rels/drawing1.xml.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${drawingRels.join("")}</Relationships>`);
-    // worksheetPhotoXml already includes the drawing relationship element; do not add it twice.
-    const ct=files.find(f=>f.name==="[Content_Types].xml");
-    ct.data=ct.data.replace("</Types>",'<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/></Types>');
+  const photoRows=photoInspections.map((x,n)=>({
+    "No":n+1,"Tanggal & Waktu":dateText(x.createdAt),
+    "Pemeriksa":x.inspector||exportInspectorName(),"Ruangan":roomName(x.roomId),
+    "Jenis Pemeriksaan":x.type||"","Hasil":x.result||"",
+    "Catatan":x.note||"","Foto":"Foto tertanam di lembar ini"
+  }));
+  const wb=XLSX.utils.book_new();
+  const specs=[
+    ["Inventaris",itemRows,[7,18,28,20,24,18,38,24]],
+    ["Ruangan",roomRows,[7,28,26,14,38,24]],
+    ["Riwayat Pemeriksaan",inspectionRows,[7,24,22,24,24,18,40,18]],
+    ["Dokumentasi Foto",photoRows,[7,24,22,24,24,18,40,26]]
+  ];
+  for(const [name,rows,widths] of specs){
+    const ws=XLSX.utils.json_to_sheet(rows);
+    ws["!cols"]=widths.map(w=>({wch:w}));
+    ws["!freeze"]={xSplit:0,ySplit:1,topLeftCell:"A2",activePane:"bottomLeft",state:"frozen"};
+    if(ws["!ref"]) ws["!autofilter"]={ref:ws["!ref"]};
+    XLSX.utils.book_append_sheet(wb,ws,name);
   }
-  const zip=zipStore(files);
-  const blob=new Blob([zip],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`Training-Center_${safeFilePart(exportInspectorName())}_${exportDateStamp()}.xlsx`;
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-  toast(`Excel berhasil diekspor dengan ${photoInspections.length} foto tertanam.`);
+
+  // Add actual images to the Documentation sheet using XLSX's supported image extension API if available.
+  // SheetJS Community Edition does not support embedding images directly; if unsupported, use ExcelJS fallback below.
+  if (photoInspections.length) {
+    // Prefer ExcelJS, which reliably supports image embedding into .xlsx.
+    const ExcelJS = await loadExcelJSLibrary();
+    const ew = new ExcelJS.Workbook();
+    ew.creator = "Training Center Inspection";
+    ew.created = new Date();
+    const addSheet=(name,rows,widths)=>{
+      const s=ew.addWorksheet(name,{views:[{state:"frozen",ySplit:1}]});
+      if(!rows.length){
+        const keys=specs.find(x=>x[0]===name)?.[1]?.[0] ? Object.keys(specs.find(x=>x[0]===name)[1][0]) : [];
+        s.addRow(keys);
+      } else {
+        s.columns=Object.keys(rows[0]).map((header,i)=>({header,key:header,width:widths[i]||18,style:{alignment:{vertical:"top",wrapText:true}}}));
+        rows.forEach(r=>s.addRow(r));
+      }
+      s.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};
+      s.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF244A78"}};
+      s.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,rows.length+1),column:Math.max(1,Object.keys(rows[0]||{}).length)}};
+      return s;
+    };
+    ew.removeWorksheet(ew.getWorksheet("Inventaris").id);
+    // Rebuild all sheets with ExcelJS so images and formatting share a single valid package.
+    addSheet("Inventaris",itemRows,[7,18,28,20,24,18,38,24]);
+    addSheet("Ruangan",roomRows,[7,28,26,14,38,24]);
+    addSheet("Riwayat Pemeriksaan",inspectionRows,[7,24,22,24,24,18,40,18]);
+    const ps=addSheet("Dokumentasi Foto",photoRows,[7,24,22,24,24,18,40,26]);
+    ps.getColumn(8).width=22;
+    photoInspections.forEach((x,i)=>{
+      const dataUrl=String(x.photo||"");
+      const mime=photoDataUrlToMime(dataUrl);
+      let extension=mime==="image/png"?"png":mime==="image/jpeg"?"jpeg":mime==="image/gif"?"gif":null;
+      if(!extension) return; // ExcelJS supports common raster formats; skip unsupported WebP to avoid corrupting workbook.
+      const imageId=ew.addImage({base64:dataUrl,extension});
+      const row=i+2;
+      ps.getRow(row).height=85;
+      ps.addImage(imageId,{tl:{col:7,row:row-1},br:{col:8,row:row},editAs:"oneCell"});
+    });
+    const buffer=await ew.xlsx.writeBuffer();
+    const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download=`Training-Center_${safeFilePart(exportInspectorName())}_${exportDateStamp()}.xlsx`;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    toast(`Excel berhasil diekspor. ${photoInspections.length} catatan memiliki foto; foto JPG/PNG/GIF disisipkan ke lembar Dokumentasi Foto.`);
+    return;
+  }
+  // No photos: export a valid XLSX using SheetJS.
+  XLSX.writeFile(wb,`Training-Center_${safeFilePart(exportInspectorName())}_${exportDateStamp()}.xlsx`);
+  toast("Excel berhasil diekspor. Belum ada foto tersimpan pada catatan pemeriksaan.");
+}
+async function loadExcelJSLibrary() {
+  if (window.ExcelJS) return window.ExcelJS;
+  if (!navigator.onLine) throw new Error("Penyisipan foto membutuhkan pustaka Excel. Buka aplikasi saat online lalu coba ekspor kembali.");
+  const sources=[
+    "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js",
+    "https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js"
+  ];
+  for(const src of sources){
+    try{
+      await new Promise((resolve,reject)=>{
+        const script=document.createElement("script");script.src=src;script.async=true;
+        script.onload=resolve;script.onerror=()=>{script.remove();reject(new Error("Gagal memuat ExcelJS"));};
+        document.head.appendChild(script);
+      });
+      if(window.ExcelJS) return window.ExcelJS;
+    }catch(e){console.warn(e);}
+  }
+  throw new Error("Pustaka penyisipan foto tidak dapat dimuat.");
 }
 $("#exportExcel").addEventListener("click",async()=>{
   try { await exportXlsxWithPhotos(); }
-  catch(err) { console.error(err); toast("Gagal mengekspor Excel. Periksa ukuran dan format foto pemeriksaan."); }
+  catch(err) { console.error(err); toast("Ekspor gagal: "+(err?.message||"periksa koneksi atau format foto.")); }
 });
 $("#exportPhotos").addEventListener("click",async()=>{
   try {

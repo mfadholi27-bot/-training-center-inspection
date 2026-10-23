@@ -70,3 +70,10 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Memperbaiki struktur relasi gambar pada lembar `Dokumentasi Foto` agar elemen gambar tidak terduplikasi.
 - Memperjelas bahwa foto yang diekspor adalah foto yang dilampirkan pada catatan Pemeriksaan saat disimpan.
 - Jika tidak ada foto pada catatan pemeriksaan, lembar dokumentasi tidak akan memiliki gambar; ekspor tidak mengambil foto secara otomatis dari galeri perangkat.
+
+
+## Pembaruan v1.6.0
+- Mengganti pembuatan paket XLSX manual dengan ExcelJS untuk ekspor foto tertanam menggunakan format Office Open XML yang valid.
+- Foto JPG/PNG/GIF yang tersimpan pada catatan pemeriksaan ditempatkan pada lembar `Dokumentasi Foto`.
+- ExcelJS dan SheetJS dimuat saat diperlukan melalui CDN; untuk ekspor foto, koneksi internet diperlukan ketika pustaka belum pernah dimuat.
+- Nama file memakai nama pemeriksa dan tanggal ekspor. Jika belum ada foto tersimpan, file tetap diekspor tanpa gambar dan menampilkan pemberitahuan.
