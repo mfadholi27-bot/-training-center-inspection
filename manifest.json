@@ -1,0 +1,20 @@
+{
+  "name": "Training Center Inspection",
+  "short_name": "TC Inspect",
+  "description": "Aplikasi inspeksi dan inventaris Training Center, offline-first.",
+  "lang": "id-ID",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080b18",
+  "theme_color": "#080b18",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

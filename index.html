@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080b18">
+  <meta name="description" content="Aplikasi inspeksi dan inventaris Training Center yang mengutamakan privasi dan penggunaan offline.">
+  <title>Training Center | Inspection</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div><div class="ambient ambient-three"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button" id="menuToggle" aria-label="Buka menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="brand"><div class="brand-mark">T<span>C</span></div><div><h1>Training Center</h1><p>INSPECTION SYSTEM</p></div></div>
+      <button class="avatar" id="profileButton" aria-label="Atur nama pemeriksa"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
+    </header>
+
+    <aside class="side-menu glass" id="sideMenu" aria-hidden="true">
+      <div class="menu-heading"><span>MENU APLIKASI</span><button class="icon-button close-x" id="menuClose" aria-label="Tutup menu">×</button></div>
+      <button class="menu-link active" data-page="home"><span class="menu-glyph">⌂</span>Beranda</button>
+      <button class="menu-link" data-page="rooms"><span class="menu-glyph">▦</span>Data Ruangan</button>
+      <button class="menu-link" data-page="inventory"><span class="menu-glyph">▣</span>Inventaris</button>
+      <button class="menu-link" data-page="inspection"><span class="menu-glyph">✓</span>Pemeriksaan</button>
+      <button class="menu-link" data-page="history"><span class="menu-glyph">◷</span>Riwayat</button>
+      <button class="menu-link" data-page="settings"><span class="menu-glyph">⚙</span>Pengaturan & Backup</button>
+      <p class="menu-footer">OFFLINE FIRST · DATA DI PERANGKAT</p>
+    </aside>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <main id="mainContent">
+      <section class="page active" id="page-home" data-title="Beranda">
+        <div class="welcome">
+          <div><p class="eyebrow">CONTROL CENTER</p><h2>Halo, <span id="helloName">Pemeriksa</span> <span class="wave">✦</span></h2><p class="muted">Mari pastikan fasilitas selalu dalam kondisi baik.</p></div>
+          <div class="live-badge"><span></span> SIAP</div>
+        </div>
+        <div class="hero-card glass">
+          <div class="hero-orb"></div><div class="hero-content">
+            <span class="eyebrow">INSPECTION OVERVIEW</span><h2>Pemeriksaan<br>lebih mudah.</h2>
+            <p>Catat kondisi ruangan dan inventaris dalam satu aplikasi.</p>
+            <button class="primary-button" data-page="inspection"><span>Mulai Pemeriksaan</span><span class="button-arrow">→</span></button>
+          </div><div class="hero-decoration">TC</div>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">RINGKASAN</p><h3>Statistik Inventaris</h3></div><span class="muted small">Data lokal</span></div>
+        <div class="stats-grid">
+          <article class="stat-card glass"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></div><p>Total Ruangan</p><strong id="roomCount">0</strong><span>Ruangan terdaftar</span></article>
+          <article class="stat-card glass"><div class="stat-icon purple"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg></div><p>Total Inventaris</p><strong id="itemCount">0</strong><span>Barang terdaftar</span></article>
+          <article class="stat-card glass"><div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg></div><p>Perlu Perbaikan</p><strong id="repairCount">0</strong><span>Temuan tercatat</span></article>
+          <article class="stat-card glass"><div class="stat-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div><p>Pemeriksaan</p><strong id="inspectionCount">0</strong><span>Total tersimpan</span></article>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">AKSES CEPAT</p><h3>Menu Utama</h3></div></div>
+        <div class="quick-grid">
+          <button class="quick-card glass" data-page="rooms"><span class="quick-icon">▦</span><strong>Ruangan</strong><span>Kelola lokasi →</span></button>
+          <button class="quick-card glass" data-page="inventory"><span class="quick-icon purple-text">▣</span><strong>Inventaris</strong><span>Kelola barang →</span></button>
+          <button class="quick-card glass" data-page="inspection"><span class="quick-icon green-text">✓</span><strong>Inspeksi</strong><span>Periksa fasilitas →</span></button>
+          <button class="quick-card glass" data-page="history"><span class="quick-icon orange-text">◷</span><strong>Riwayat</strong><span>Lihat aktivitas →</span></button>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">AKTIVITAS</p><h3>Pemeriksaan Terakhir</h3></div><button class="text-button" data-page="history">Lihat semua →</button></div>
+        <div class="activity-list" id="recentActivity"></div>
+        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 1.0.0</span></footer>
+      </section>
+
+      <section class="page" id="page-rooms" data-title="Data Ruangan">
+        <div class="page-head"><div><p class="eyebrow">LOCATION MANAGEMENT</p><h2 class="page-title">Data Ruangan</h2><p class="muted">Kelola lokasi pemeriksaan.</p></div><button class="primary-button compact" id="addRoomBtn">＋ Tambah</button></div>
+        <form class="glass form-card hidden" id="roomForm"><h3>Ruangan baru</h3><label>Nama ruangan<input id="roomName" required maxlength="80" placeholder="Contoh: Ruang Kelas A"></label><label>Gedung / lokasi<input id="roomBuilding" maxlength="80" placeholder="Contoh: Training Center"></label><label>Lantai<input id="roomFloor" maxlength="30" placeholder="Contoh: Lantai 1"></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="roomForm">Batal</button><button class="primary-button" type="submit">Simpan Ruangan</button></div></form>
+        <div class="search-wrap"><input id="roomSearch" placeholder="Cari ruangan…" aria-label="Cari ruangan"></div><div id="roomList" class="record-list"></div>
+      </section>
+
+      <section class="page" id="page-inventory" data-title="Inventaris">
+        <div class="page-head"><div><p class="eyebrow">ASSET MANAGEMENT</p><h2 class="page-title">Inventaris</h2><p class="muted">Catat barang dan kondisinya.</p></div><button class="primary-button compact" id="addItemBtn">＋ Tambah</button></div>
+        <form class="glass form-card hidden" id="itemForm"><h3>Barang inventaris</h3><label>Nama barang<input id="itemName" required maxlength="100" placeholder="Contoh: Proyektor"></label><label>Kode barang<input id="itemCode" maxlength="60" placeholder="Opsional"></label><label>Ruangan<select id="itemRoom"><option value="">Belum ditentukan</option></select></label><label>Kondisi<select id="itemCondition"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><label>Catatan<textarea id="itemNote" rows="2" maxlength="500" placeholder="Catatan opsional"></textarea></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="itemForm">Batal</button><button class="primary-button" type="submit">Simpan Barang</button></div></form>
+        <div class="search-wrap"><input id="itemSearch" placeholder="Cari nama atau kode barang…" aria-label="Cari inventaris"></div><div id="itemList" class="record-list"></div>
+      </section>
+
+      <section class="page" id="page-inspection" data-title="Pemeriksaan">
+        <p class="eyebrow">FACILITY INSPECTION</p><h2 class="page-title">Pemeriksaan</h2><p class="muted">Mulai kapan saja sesuai kebutuhan.</p>
+        <form class="glass form-card" id="inspectionForm">
+          <h3>Catat pemeriksaan</h3>
+          <label>Nama pemeriksa<input id="inspectorName" required maxlength="80" placeholder="Nama pemeriksa"></label>
+          <label>Ruangan<select id="inspectionRoom"><option value="">Pilih ruangan (opsional)</option></select></label>
+          <label>Jenis pemeriksaan<select id="inspectionType"><option>Inventaris barang</option><option>Fasilitas ruangan</option><option>Kebersihan ruangan</option><option>Pemeriksaan umum</option></select></label>
+          <label>Hasil pemeriksaan<select id="inspectionResult"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Tidak Ditemukan</option></select></label>
+          <label>Catatan temuan<textarea id="inspectionNote" rows="4" maxlength="1500" placeholder="Jelaskan hasil atau kerusakan yang ditemukan…"></textarea></label>
+          <label>Foto dokumentasi (opsional)<input id="inspectionPhoto" type="file" accept="image/*" capture="environment"></label>
+          <p class="field-help">Foto diperkecil sebelum disimpan. Simpan backup secara berkala.</p>
+          <button class="primary-button full-button" type="submit">Simpan Pemeriksaan <span>→</span></button>
+        </form>
+      </section>
+
+      <section class="page" id="page-history" data-title="Riwayat">
+        <p class="eyebrow">INSPECTION RECORDS</p><h2 class="page-title">Riwayat Pemeriksaan</h2><p class="muted">Catatan yang tersimpan di perangkat ini.</p>
+        <div id="historyList" class="record-list"></div>
+      </section>
+
+      <section class="page" id="page-settings" data-title="Pengaturan & Backup">
+        <p class="eyebrow">LOCAL SETTINGS</p><h2 class="page-title">Pengaturan & Backup</h2><p class="muted">Data disimpan di perangkat yang digunakan.</p>
+        <div class="glass settings-card"><div><h3>Nama pemeriksa</h3><p class="muted">Digunakan sebagai nama awal pada formulir.</p></div><form id="profileForm" class="inline-form"><input id="profileName" maxlength="80" placeholder="Nama pemeriksa" required><button class="primary-button" type="submit">Simpan</button></form></div>
+        <div class="glass settings-card"><div><h3>Backup data</h3><p class="muted">Ekspor ruangan, inventaris, dan riwayat ke berkas JSON.</p></div><button class="primary-button full-button" id="exportBackup">Ekspor Backup JSON</button></div>
+        <div class="glass settings-card"><div><h3>Pulihkan backup</h3><p class="muted">Impor backup JSON. Data yang memiliki ID sama akan diperbarui; data lain tetap ada.</p></div><label class="file-button">Pilih berkas backup<input id="importBackup" type="file" accept=".json,application/json"></label></div>
+        <div class="glass settings-card"><div><h3>Ekspor inventaris</h3><p class="muted">Unduh daftar inventaris dalam format CSV.</p></div><button class="secondary-button full-button" id="exportCsv">Ekspor CSV</button></div>
+        <div class="notice"><strong>Privasi & offline</strong><p>Data tidak dikirim ke server. Hapus data browser atau kehilangan perangkat dapat menghilangkan data lokal. Buat backup secara berkala.</p><p id="offlineStatus">Memeriksa dukungan offline…</p></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav glass" aria-label="Navigasi utama">
+      <button class="nav-item active" data-page="home"><span class="nav-icon">⌂</span><span>Beranda</span></button>
+      <button class="nav-item" data-page="rooms"><span class="nav-icon">▦</span><span>Ruangan</span></button>
+      <button class="nav-item nav-main" data-page="inspection" aria-label="Pemeriksaan"><span class="nav-main-icon">✓</span><span>Inspeksi</span></button>
+      <button class="nav-item" data-page="inventory"><span class="nav-icon">▣</span><span>Barang</span></button>
+      <button class="nav-item" data-page="history"><span class="nav-icon">◷</span><span>Riwayat</span></button>
+    </nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script src="./db.js"></script><script src="./app.js"></script>
+</body>
+</html>
