@@ -64,3 +64,9 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Foto pemeriksaan tertanam langsung pada lembar `Dokumentasi Foto` bersama metadata tanggal, pemeriksa, ruangan, jenis, hasil, dan catatan.
 - Nama file otomatis memakai nama pemeriksa dan tanggal ekspor.
 - Ekspor arsip foto JSON tetap tersedia sebagai cadangan opsional.
+
+
+## Perbaikan v1.5.1
+- Memperbaiki struktur relasi gambar pada lembar `Dokumentasi Foto` agar elemen gambar tidak terduplikasi.
+- Memperjelas bahwa foto yang diekspor adalah foto yang dilampirkan pada catatan Pemeriksaan saat disimpan.
+- Jika tidak ada foto pada catatan pemeriksaan, lembar dokumentasi tidak akan memiliki gambar; ekspor tidak mengambil foto secara otomatis dari galeri perangkat.
