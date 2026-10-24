@@ -94,3 +94,10 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Foto pada Riwayat tersembunyi secara default dan baru terlihat setelah tombol Lihat foto dokumentasi ditekan.
 - Inventaris dikelompokkan dalam panel kategori yang dapat dibuka/tutup.
 - Meja, kursi, papan tulis, podium, lemari kelas, dan bangku otomatis memilih kategori Perlengkapan Kelas; kategori lama Furniture/Peralatan kelas ikut ditampilkan dalam kelompok itu.
+
+
+## Pembaruan v1.9.0
+- Beranda memakai judul **Akses Cepat**.
+- Empat menu utama ditampilkan sebagai carousel horizontal yang bisa digeser di ponsel.
+- Animasi kartu, ikon mengambang, efek cahaya, dan petunjuk geser ditambahkan; tata letak desktop tetap empat kolom.
+- Cache offline diperbarui ke v1.9.0.

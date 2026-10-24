@@ -41,7 +41,7 @@
         </div>
         <div class="hero-card glass">
           <div class="hero-orb"></div><div class="hero-content">
-            <span class="eyebrow">INSPECTION OVERVIEW</span><h2>Pemeriksaan<br>lebih mudah.</h2>
+            <span class="eyebrow">AKTIVITAS FASILITAS</span><h2>Pemeriksaan<br>lebih mudah.</h2>
             <p>Catat kondisi ruangan dan inventaris dalam satu aplikasi.</p>
             <button class="primary-button" data-page="inspection"><span>Mulai Pemeriksaan</span><span class="button-arrow">→</span></button>
           </div><div class="hero-decoration">TC</div>
@@ -53,16 +53,16 @@
           <article class="stat-card glass"><div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg></div><p>Perlu Perbaikan</p><strong id="repairCount">0</strong><span>Temuan tercatat</span></article>
           <article class="stat-card glass"><div class="stat-icon green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div><p>Pemeriksaan</p><strong id="inspectionCount">0</strong><span>Total tersimpan</span></article>
         </div>
-        <div class="section-heading"><div><p class="eyebrow">AKSES CEPAT</p><h3>Menu Utama</h3></div></div>
-        <div class="quick-grid">
-          <button class="quick-card glass" data-page="rooms"><span class="quick-icon">▦</span><strong>Ruangan</strong><span>Kelola lokasi →</span></button>
-          <button class="quick-card glass" data-page="inventory"><span class="quick-icon purple-text">▣</span><strong>Inventaris</strong><span>Kelola barang →</span></button>
-          <button class="quick-card glass" data-page="inspection"><span class="quick-icon green-text">✓</span><strong>Inspeksi</strong><span>Periksa fasilitas →</span></button>
-          <button class="quick-card glass" data-page="history"><span class="quick-icon orange-text">◷</span><strong>Riwayat</strong><span>Lihat aktivitas →</span></button>
+        <div class="section-heading quick-heading"><div><p class="eyebrow">MENU NAVIGASI</p><h3>Akses Cepat</h3></div><span class="swipe-hint"><span>GESER</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></div>
+        <div class="quick-grid" aria-label="Akses cepat, geser ke samping untuk memilih menu">
+          <button class="quick-card glass quick-blue" data-page="rooms"><span class="quick-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span><strong>Ruangan</strong><span>Kelola lokasi <b>→</b></span></button>
+          <button class="quick-card glass quick-purple" data-page="inventory"><span class="quick-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg></span><strong>Inventaris</strong><span>Kelola barang <b>→</b></span></button>
+          <button class="quick-card glass quick-green" data-page="inspection"><span class="quick-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3.5 7v5.5c0 4.2 3.4 7 8.5 8.5 5.1-1.5 8.5-4.3 8.5-8.5V7L12 3Z"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg></span><strong>Inspeksi</strong><span>Periksa fasilitas <b>→</b></span></button>
+          <button class="quick-card glass quick-orange" data-page="history"><span class="quick-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span><strong>Riwayat</strong><span>Lihat aktivitas <b>→</b></span></button>
         </div>
         <div class="section-heading"><div><p class="eyebrow">AKTIVITAS</p><h3>Pemeriksaan Terakhir</h3></div><button class="text-button" data-page="history">Lihat semua →</button></div>
         <div class="activity-list" id="recentActivity"></div>
-        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 1.8.0</span></footer>
+        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 1.9.0</span></footer>
       </section>
 
       <section class="page" id="page-rooms" data-title="Data Ruangan">
