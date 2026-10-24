@@ -107,6 +107,9 @@ document.addEventListener("click",async e=>{
  if(b.dataset.restoreRoom){await restoreRecord("rooms",b.dataset.restoreRoom,"Ruangan");return}
  if(b.dataset.restoreItem){await restoreRecord("items",b.dataset.restoreItem,"Inventaris");return}
  if(b.dataset.restoreInspection){await restoreRecord("inspections",b.dataset.restoreInspection,"Pemeriksaan");return}
+ if(b.dataset.deleteRoom){await deleteRecord("rooms",b.dataset.deleteRoom,"Ruangan");return}
+ if(b.dataset.deleteItem){await deleteRecord("items",b.dataset.deleteItem,"Inventaris");return}
+ if(b.dataset.deleteInspection){await deleteRecord("inspections",b.dataset.deleteInspection,"Pemeriksaan");return}
 });
 async function renderAudit(){const el=$("#auditList");if(!el)return;try{const rows=(await TCDB.all("audit")).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,30);el.innerHTML=rows.length?rows.map(x=>`<div class="audit-row"><strong>${esc(x.action)} · ${esc(x.entity)}</strong><span>${esc(x.details?.name||x.details?.type||"Data diperbarui")}</span><small>${esc(x.by||"Pemeriksa")} · ${dateLabel(x.at)}</small></div>`).join(""):'<p class="muted">Belum ada perubahan yang tercatat.</p>'}catch(e){el.innerHTML='<p class="muted">Riwayat perubahan belum tersedia.</p>'}}
 $("#roomSearch").addEventListener("input",async()=>renderRooms(await TCDB.all("rooms")));
