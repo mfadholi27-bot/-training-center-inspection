@@ -117,3 +117,24 @@
   .nav-icon svg{width:27px;height:27px}
   .nav-main-icon{width:53px;height:53px}
 }
+
+/* v1.8.0 */
+.menu-glyph{width:30px;height:30px;display:grid;place-items:center;flex:0 0 30px}
+.menu-glyph svg{width:27px;height:27px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.menu-link{min-height:50px;font-weight:600}.menu-link.active .menu-glyph{color:#9fc4ff}
+.inventory-category{border:1px solid #ffffff20;border-radius:18px;background:linear-gradient(135deg,#ffffff0d,#8e7aff0a);overflow:hidden}
+.inventory-category>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px;cursor:pointer;min-height:76px}
+.inventory-category>summary::-webkit-details-marker{display:none}
+.category-title{display:flex;align-items:center;gap:12px;min-width:0}.category-title>span:last-child{display:grid;gap:4px}
+.category-title strong{font-size:14px;color:#f3f6ff}.category-title small{font-size:11px;color:var(--muted)}
+.category-symbol{width:43px;height:43px;display:grid;place-items:center;border-radius:14px;background:#7199ff20;color:#a9c8ff;flex:0 0 auto}
+.category-symbol svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.category-chevron{font-size:22px;color:#9ebcff;transition:transform .2s}.inventory-category[open] .category-chevron{transform:rotate(180deg)}
+.inventory-group-items{display:grid;gap:10px;padding:0 10px 10px}.inventory-group-items .record-card{background:#ffffff07}
+.record-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.history-photo{margin-top:11px;border:1px solid #ffffff20;background:#ffffff06;border-radius:12px;overflow:hidden}
+.history-photo>summary{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;color:#a9c8ff;font-size:11px;font-weight:700;list-style:none}
+.history-photo>summary::-webkit-details-marker{display:none}
+.history-photo>summary svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.history-photo[open]>summary{border-bottom:1px solid #ffffff15}.history-photo img{display:block;width:100%;max-height:280px;object-fit:contain;padding:8px;background:#050816}
+@media(min-width:700px){.inventory-group-items .record-card{padding:18px}.history-photo img{max-height:420px}}

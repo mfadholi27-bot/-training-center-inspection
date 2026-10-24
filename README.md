@@ -87,3 +87,10 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Mengganti ikon navigasi berbasis karakter menjadi ikon SVG yang konsisten untuk Beranda, Ruangan, Inspeksi, Barang, dan Riwayat.
 - Memperbesar ikon navigasi bawah, tombol menu, profil, dan penanda merek.
 - Merapikan ukuran ikon dan label agar lebih mudah digunakan pada layar ponsel.
+
+
+## Pembaruan v1.8.0
+- Ikon menu samping disamakan dengan ikon navigasi utama menggunakan SVG.
+- Foto pada Riwayat tersembunyi secara default dan baru terlihat setelah tombol Lihat foto dokumentasi ditekan.
+- Inventaris dikelompokkan dalam panel kategori yang dapat dibuka/tutup.
+- Meja, kursi, papan tulis, podium, lemari kelas, dan bangku otomatis memilih kategori Perlengkapan Kelas; kategori lama Furniture/Peralatan kelas ikut ditampilkan dalam kelompok itu.

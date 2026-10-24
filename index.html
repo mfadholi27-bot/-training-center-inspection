@@ -23,12 +23,12 @@
 
     <aside class="side-menu glass" id="sideMenu" aria-hidden="true">
       <div class="menu-heading"><span>MENU APLIKASI</span><button class="icon-button close-x" id="menuClose" aria-label="Tutup menu">×</button></div>
-      <button class="menu-link active" data-page="home"><span class="menu-glyph">⌂</span>Beranda</button>
-      <button class="menu-link" data-page="rooms"><span class="menu-glyph">▦</span>Data Ruangan</button>
-      <button class="menu-link" data-page="inventory"><span class="menu-glyph">▣</span>Inventaris</button>
-      <button class="menu-link" data-page="inspection"><span class="menu-glyph">✓</span>Pemeriksaan</button>
-      <button class="menu-link" data-page="history"><span class="menu-glyph">◷</span>Riwayat</button>
-      <button class="menu-link" data-page="settings"><span class="menu-glyph">⚙</span>Pengaturan & Backup</button>
+      <button class="menu-link active" data-page="home"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.8l8.5 6.7v9.2a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3z"/><path d="M9 21v-6.5h6V21"/></svg></span>Beranda</button>
+      <button class="menu-link" data-page="rooms"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg></span>Data Ruangan</button>
+      <button class="menu-link" data-page="inventory"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M8 4v16M16 4v16M3.5 9.3h17M3.5 14.7h17"/></svg></span>Inventaris</button>
+      <button class="menu-link" data-page="inspection"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19.5 6.5"/></svg></span>Pemeriksaan</button>
+      <button class="menu-link" data-page="history"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v5.8l4 2.3"/></svg></span>Riwayat</button>
+      <button class="menu-link" data-page="settings"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 13.5a7.4 7.4 0 0 0 0-3l1.5-1.1-1.7-2.9-1.7.7a7.5 7.5 0 0 0-2.5-1.4L14.3 4h-3.4l-.3 1.8a7.5 7.5 0 0 0-2.5 1.4l-1.7-.7-1.7 2.9L6.2 10.5a7.4 7.4 0 0 0 0 3l-1.5 1.1 1.7 2.9 1.7-.7a7.5 7.5 0 0 0 2.5 1.4l.3 1.8h3.4l.3-1.8a7.5 7.5 0 0 0 2.5-1.4l1.7.7 1.7-2.9z"/></svg></span>Pengaturan &amp; Backup</button>
       <p class="menu-footer">OFFLINE FIRST · DATA DI PERANGKAT</p>
     </aside>
     <div class="menu-overlay" id="menuOverlay"></div>
@@ -62,7 +62,7 @@
         </div>
         <div class="section-heading"><div><p class="eyebrow">AKTIVITAS</p><h3>Pemeriksaan Terakhir</h3></div><button class="text-button" data-page="history">Lihat semua →</button></div>
         <div class="activity-list" id="recentActivity"></div>
-        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 1.6.1</span></footer>
+        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 1.8.0</span></footer>
       </section>
 
       <section class="page" id="page-rooms" data-title="Data Ruangan">
@@ -73,7 +73,7 @@
 
       <section class="page" id="page-inventory" data-title="Inventaris">
         <div class="page-head"><div><p class="eyebrow">ASSET MANAGEMENT</p><h2 class="page-title">Inventaris</h2><p class="muted">Catat barang dan kondisinya.</p></div><button class="primary-button compact" id="addItemBtn">＋ Tambah</button></div>
-        <form class="glass form-card hidden" id="itemForm"><h3>Barang inventaris</h3><label>Nama barang<input id="itemName" required maxlength="100" placeholder="Contoh: Proyektor"></label><label>Kode barang<input id="itemCode" maxlength="60" placeholder="Otomatis jika dikosongkan"></label><label>Kategori<select id="itemCategory"><option>Elektronik</option><option>Furniture</option><option>Peralatan kelas</option><option>Jaringan &amp; IT</option><option>Kebersihan</option><option>Keselamatan</option><option>Utilitas</option><option>Lainnya</option></select></label><label>Ruangan<select id="itemRoom"><option value="">Belum ditentukan</option></select></label><label>Kondisi<select id="itemCondition"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><label>Catatan<textarea id="itemNote" rows="2" maxlength="500" placeholder="Catatan opsional"></textarea></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="itemForm">Batal</button><button class="primary-button" type="submit">Simpan Barang</button></div></form>
+        <form class="glass form-card hidden" id="itemForm"><h3>Barang inventaris</h3><label>Nama barang<input id="itemName" required maxlength="100" placeholder="Contoh: Proyektor"></label><label>Kode barang<input id="itemCode" maxlength="60" placeholder="Otomatis jika dikosongkan"></label><label>Kategori<select id="itemCategory"><option>Elektronik</option><option>Furniture</option><option>Perlengkapan Kelas</option><option>Peralatan kelas</option><option>Jaringan &amp; IT</option><option>Kebersihan</option><option>Keselamatan</option><option>Utilitas</option><option>Lainnya</option></select></label><label>Ruangan<select id="itemRoom"><option value="">Belum ditentukan</option></select></label><label>Kondisi<select id="itemCondition"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><label>Catatan<textarea id="itemNote" rows="2" maxlength="500" placeholder="Catatan opsional"></textarea></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="itemForm">Batal</button><button class="primary-button" type="submit">Simpan Barang</button></div></form>
         <div class="search-wrap"><input id="itemSearch" placeholder="Cari nama, kode, kategori, atau ruangan…" aria-label="Cari inventaris"></div><label class="filter-label">Filter kondisi<select id="itemConditionFilter"><option value="">Semua kondisi</option><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><div id="itemList" class="record-list"></div>
       </section>
 
