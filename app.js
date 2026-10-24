@@ -95,7 +95,32 @@ async function openEditItem(idValue){const i=await TCDB.get("items",idValue);if(
 async function openEditInspection(idValue){const x=await TCDB.get("inspections",idValue);if(!x)return;showPage("inspection");await fillRoomSelects();state.editingInspection=x.id;$("#inspectorName").value=x.inspector||"";$("#inspectionRoom").value=x.roomId||"";$("#inspectionType").value=x.type||"Pemeriksaan umum";$("#inspectionResult").value=x.result||"Baik";$("#inspectionNote").value=x.note||"";$("#inspectionPhoto").value="";$("#inspectionFormTitle").textContent="Edit catatan pemeriksaan";$("#inspectionSubmit").textContent="Simpan Perubahan";$("#cancelInspectionEdit").classList.remove("hidden");$("#inspectionFormTitle").scrollIntoView({behavior:"smooth",block:"start"})}
 async function archiveRecord(store,idValue,entity){const row=await TCDB.get(store,idValue);if(!row)return;if(!confirm("Arsipkan "+entity+" ini? Data tidak dihapus dan bisa dipulihkan."))return;row.archivedAt=new Date().toISOString();row.updatedAt=row.archivedAt;await TCDB.put(store,row);await TCDB.log("ARSIPKAN",entity,idValue,{name:row.name||row.type||""});await refresh();toast(entity+" dipindahkan ke arsip.")}
 async function restoreRecord(store,idValue,entity){const row=await TCDB.get(store,idValue);if(!row)return;delete row.archivedAt;row.updatedAt=new Date().toISOString();await TCDB.put(store,row);await TCDB.log("PULIHKAN",entity,idValue,{name:row.name||row.type||""});await refresh();toast(entity+" berhasil dipulihkan.")}
-async function deleteRecord(store,idValue,entity){const row=await TCDB.get(store,idValue);if(!row)return;const display=row.name||row.type||entity;if(store==="rooms"){const [items,inspections]=await Promise.all([TCDB.all("items"),TCDB.all("inspections")]);const linkedItems=items.filter(x=>x.roomId===idValue),linkedInspections=inspections.filter(x=>x.roomId===idValue);if(linkedItems.length||linkedInspections.length){toast("Ruangan masih dipakai oleh "+linkedItems.length+" inventaris dan "+linkedInspections.length+" pemeriksaan. Pindahkan data terkait sebelum menghapus.");return}}if(!confirm("HAPUS PERMANEN\n\nYakin menghapus "+display+"? Tindakan ini tidak dapat dibatalkan. Buat backup terlebih dahulu bila diperlukan."))return;try{await TCDB.remove(store,idValue);await TCDB.log("HAPUS PERMANEN",entity,idValue,{name:display});if(store==="rooms"&&state.editingRoom===idValue)resetRoomForm();if(store==="items"&&state.editingItem===idValue)resetItemForm();if(store==="inspections"&&state.editingInspection===idValue)resetInspectionEdit();await refresh();toast(entity+" berhasil dihapus.")}catch(err){console.error(err);toast("Gagal menghapus data. Coba lagi.")}}
+async function deleteRecord(store,idValue,entity){
+  let row;
+  try {
+    row=await TCDB.get(store,idValue);
+    if(!row){await refresh();toast("Data tidak ditemukan. Daftar diperbarui.");return;}
+    const display=row.name||row.type||entity;
+    if(store==="rooms"){
+      const [items,inspections]=await Promise.all([TCDB.all("items"),TCDB.all("inspections")]);
+      const linkedItems=items.filter(x=>x.roomId===idValue),linkedInspections=inspections.filter(x=>x.roomId===idValue);
+      if(linkedItems.length||linkedInspections.length){toast("Ruangan masih dipakai oleh "+linkedItems.length+" inventaris dan "+linkedInspections.length+" pemeriksaan. Pindahkan data terkait sebelum menghapus.");return;}
+    }
+    if(!confirm("HAPUS PERMANEN\n\nYakin menghapus "+display+"? Tindakan ini tidak dapat dibatalkan. Buat backup terlebih dahulu bila diperlukan."))return;
+    // Delete the requested record first. Audit logging must never block list refresh.
+    await TCDB.remove(store,idValue);
+    if(store==="rooms"&&state.editingRoom===idValue)resetRoomForm();
+    if(store==="items"&&state.editingItem===idValue)resetItemForm();
+    if(store==="inspections"&&state.editingInspection===idValue)resetInspectionEdit();
+    await refresh();
+    toast(entity+" berhasil dihapus.");
+    try { await TCDB.log("HAPUS PERMANEN",entity,idValue,{name:display}); await renderAudit(); }
+    catch(auditError) { console.error("Data terhapus, tetapi riwayat perubahan gagal dicatat:",auditError); toast(entity+" dihapus. Riwayat perubahan belum dapat dicatat."); }
+  } catch(err) {
+    console.error("Penghapusan gagal:",err);
+    toast("Penghapusan gagal. Periksa penyimpanan browser, lalu coba lagi.");
+  }
+}
 document.addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.dataset.editRoom){await openEditRoom(b.dataset.editRoom);return}

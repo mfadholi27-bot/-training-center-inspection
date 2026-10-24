@@ -1,6 +1,6 @@
 /* Penyimpanan lokal IndexedDB; tidak mengirim data ke server. */
 (function(){
-  const DB_NAME="tc-inspection-local", DB_VERSION=2;
+  const DB_NAME="tc-inspection-local", DB_VERSION=3;
   let dbPromise;
   function openDB(){
     if(dbPromise) return dbPromise;
