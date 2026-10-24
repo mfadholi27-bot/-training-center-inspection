@@ -62,24 +62,24 @@
         </div>
         <div class="section-heading"><div><p class="eyebrow">AKTIVITAS</p><h3>Pemeriksaan Terakhir</h3></div><button class="text-button" data-page="history">Lihat semua →</button></div>
         <div class="activity-list" id="recentActivity"></div>
-        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 1.9.0</span></footer>
+        <footer class="app-footer"><span>TRAINING CENTER INSPECTION</span><span>Versi 2.0.0</span></footer>
       </section>
 
       <section class="page" id="page-rooms" data-title="Data Ruangan">
         <div class="page-head"><div><p class="eyebrow">LOCATION MANAGEMENT</p><h2 class="page-title">Data Ruangan</h2><p class="muted">Kelola lokasi pemeriksaan.</p></div><button class="primary-button compact" id="addRoomBtn">＋ Tambah</button></div>
-        <form class="glass form-card hidden" id="roomForm"><h3>Ruangan baru</h3><label>Nama ruangan<input id="roomName" required maxlength="80" placeholder="Contoh: Ruang Kelas A"></label><label>Gedung / lokasi<input id="roomBuilding" maxlength="80" placeholder="Contoh: Training Center"></label><label>Lantai<input id="roomFloor" maxlength="30" placeholder="Contoh: Lantai 1"></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="roomForm">Batal</button><button class="primary-button" type="submit">Simpan Ruangan</button></div></form>
-        <div class="search-wrap"><input id="roomSearch" placeholder="Cari ruangan…" aria-label="Cari ruangan"></div><div id="roomList" class="record-list"></div>
+        <form class="glass form-card hidden" id="roomForm"><h3 id="roomFormTitle">Ruangan baru</h3><label>Nama ruangan<input id="roomName" required maxlength="80" placeholder="Contoh: Ruang Kelas A"></label><label>Gedung / lokasi<input id="roomBuilding" maxlength="80" placeholder="Contoh: Training Center"></label><label>Lantai<input id="roomFloor" maxlength="30" placeholder="Contoh: Lantai 1"></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="roomForm">Batal</button><button class="primary-button" type="submit">Simpan Ruangan</button></div></form>
+        <div class="search-wrap"><input id="roomSearch" placeholder="Cari ruangan…" aria-label="Cari ruangan"></div><label class="archive-toggle"><input id="showArchivedRooms" type="checkbox"> Tampilkan arsip ruangan</label><div id="roomList" class="record-list"></div>
       </section>
 
       <section class="page" id="page-inventory" data-title="Inventaris">
         <div class="page-head"><div><p class="eyebrow">ASSET MANAGEMENT</p><h2 class="page-title">Inventaris</h2><p class="muted">Catat barang dan kondisinya.</p></div><button class="primary-button compact" id="addItemBtn">＋ Tambah</button></div>
-        <form class="glass form-card hidden" id="itemForm"><h3>Barang inventaris</h3><label>Nama barang<input id="itemName" required maxlength="100" placeholder="Contoh: Proyektor"></label><label>Kode barang<input id="itemCode" maxlength="60" placeholder="Otomatis jika dikosongkan"></label><label>Kategori<select id="itemCategory"><option>Elektronik</option><option>Furniture</option><option>Perlengkapan Kelas</option><option>Peralatan kelas</option><option>Jaringan &amp; IT</option><option>Kebersihan</option><option>Keselamatan</option><option>Utilitas</option><option>Lainnya</option></select></label><label>Ruangan<select id="itemRoom"><option value="">Belum ditentukan</option></select></label><label>Kondisi<select id="itemCondition"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><label>Catatan<textarea id="itemNote" rows="2" maxlength="500" placeholder="Catatan opsional"></textarea></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="itemForm">Batal</button><button class="primary-button" type="submit">Simpan Barang</button></div></form>
-        <div class="search-wrap"><input id="itemSearch" placeholder="Cari nama, kode, kategori, atau ruangan…" aria-label="Cari inventaris"></div><label class="filter-label">Filter kondisi<select id="itemConditionFilter"><option value="">Semua kondisi</option><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><div id="itemList" class="record-list"></div>
+        <form class="glass form-card hidden" id="itemForm"><h3 id="itemFormTitle">Barang inventaris</h3><label>Nama barang<input id="itemName" required maxlength="100" placeholder="Contoh: Proyektor"></label><label>Kode barang<input id="itemCode" maxlength="60" placeholder="Otomatis jika dikosongkan"></label><label>Kategori<select id="itemCategory"><option>Elektronik</option><option>Furniture</option><option>Perlengkapan Kelas</option><option>Peralatan kelas</option><option>Jaringan &amp; IT</option><option>Kebersihan</option><option>Keselamatan</option><option>Utilitas</option><option>Lainnya</option></select></label><label>Ruangan<select id="itemRoom"><option value="">Belum ditentukan</option></select></label><label>Kondisi<select id="itemCondition"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><label>Catatan<textarea id="itemNote" rows="2" maxlength="500" placeholder="Catatan opsional"></textarea></label><div class="form-actions"><button type="button" class="secondary-button" data-cancel="itemForm">Batal</button><button class="primary-button" type="submit">Simpan Barang</button></div></form>
+        <div class="search-wrap"><input id="itemSearch" placeholder="Cari nama, kode, kategori, atau ruangan…" aria-label="Cari inventaris"></div><label class="filter-label">Filter kondisi<select id="itemConditionFilter"><option value="">Semua kondisi</option><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Hilang</option><option>Tidak Ditemukan</option></select></label><label class="archive-toggle"><input id="showArchivedItems" type="checkbox"> Tampilkan arsip inventaris</label><div id="itemList" class="record-list"></div>
       </section>
 
       <section class="page" id="page-inspection" data-title="Pemeriksaan">
         <p class="eyebrow">FACILITY INSPECTION</p><h2 class="page-title">Pemeriksaan</h2><p class="muted">Mulai kapan saja sesuai kebutuhan.</p>
-        <form class="glass form-card" id="inspectionForm">
+        <form class="glass form-card" id="inspectionForm"><h3 id="inspectionFormTitle">Catat pemeriksaan</h3>
           <h3>Catat pemeriksaan</h3>
           <label>Nama pemeriksa<input id="inspectorName" required maxlength="80" placeholder="Nama pemeriksa"></label>
           <label>Ruangan<select id="inspectionRoom"><option value="">Pilih ruangan (opsional)</option></select></label>
@@ -88,13 +88,13 @@
           <label>Catatan temuan<textarea id="inspectionNote" rows="4" maxlength="1500" placeholder="Jelaskan hasil atau kerusakan yang ditemukan…"></textarea></label>
           <label>Foto dokumentasi (opsional)<input id="inspectionPhoto" type="file" accept="image/*" capture="environment"></label>
           <p class="field-help">Foto diperkecil sebelum disimpan. Simpan backup secara berkala.</p>
-          <button class="primary-button full-button" type="submit">Simpan Pemeriksaan <span>→</span></button>
+          <div class="form-actions"><button type="button" class="secondary-button hidden" id="cancelInspectionEdit">Batal edit</button><button class="primary-button" type="submit" id="inspectionSubmit">Simpan Pemeriksaan <span>→</span></button></div>
         </form>
       </section>
 
       <section class="page" id="page-history" data-title="Riwayat">
         <p class="eyebrow">INSPECTION RECORDS</p><h2 class="page-title">Riwayat Pemeriksaan</h2><p class="muted">Catatan yang tersimpan di perangkat ini.</p>
-        <div id="historyList" class="record-list"></div>
+        <label class="archive-toggle"><input id="showArchivedInspections" type="checkbox"> Tampilkan arsip pemeriksaan</label><div id="historyList" class="record-list"></div>
       </section>
 
       <section class="page" id="page-settings" data-title="Pengaturan & Backup">
@@ -104,6 +104,7 @@
         <div class="glass settings-card"><div><h3>Pulihkan backup</h3><p class="muted">Impor backup JSON. Data yang memiliki ID sama akan diperbarui; data lain tetap ada.</p></div><label class="file-button">Pilih berkas backup<input id="importBackup" type="file" accept=".json,application/json"></label></div>
         <div class="glass settings-card"><div><h3>Ekspor ke Excel</h3><p class="muted">Nama file otomatis memakai nama pemeriksa dan tanggal ekspor. Excel berisi lembar Inventaris, Ruangan, dan Riwayat Pemeriksaan dengan judul kolom konsisten untuk disalin ke file master.</p></div><button class="primary-button full-button" id="exportExcel">Ekspor Excel + Foto (.xlsx)</button></div>
         <div class="glass settings-card"><div><h3>Cadangan arsip foto (opsional)</h3><p class="muted">Opsional: ekspor arsip foto terpisah sebagai cadangan. Foto yang dilampirkan saat menyimpan pemeriksaan disisipkan ke lembar Dokumentasi Foto dalam Excel (.xlsx). Ekspor foto membutuhkan koneksi internet saat pustaka pertama kali dimuat.</p></div><button class="secondary-button full-button" id="exportPhotos">Ekspor Arsip Foto</button></div>
+        <div class="glass settings-card"><div><h3>Riwayat perubahan</h3><p class="muted">Catatan perubahan data, arsip, dan pemulihan yang dilakukan di perangkat ini.</p></div><div id="auditList" class="audit-list"><p class="muted">Memuat riwayat…</p></div></div>
         <div class="notice"><strong>Privasi & offline</strong><p>Data tidak dikirim ke server. Hapus data browser atau kehilangan perangkat dapat menghilangkan data lokal. Buat backup secara berkala.</p><p id="offlineStatus">Memeriksa dukungan offline…</p></div>
       </section>
     </main>

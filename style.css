@@ -141,3 +141,15 @@
 
 /* v1.9.0 quick-access horizontal carousel */
 @media(prefers-reduced-motion:reduce){.quick-card,.quick-icon,.swipe-hint svg{animation:none!important}}
+
+/* v2.0 data management controls */
+.archive-toggle{display:flex!important;align-items:center;gap:9px;color:#aebbd5;font-size:11px;margin:10px 0 14px;cursor:pointer}
+.archive-toggle input{width:16px;height:16px;accent-color:#7b9dff}
+.audit-list{display:grid;gap:9px;margin-top:13px}
+.audit-row{display:grid;gap:4px;padding:11px 12px;border:1px solid #ffffff12;background:#ffffff05;border-radius:12px}
+.audit-row strong{font-size:11px;color:#dce7ff}
+.audit-row span{font-size:11px;color:#aebbd5;overflow-wrap:anywhere}
+.audit-row small{font-size:9px;color:#7485a6}
+.record-actions .mini-button{min-height:34px;padding:8px 11px;font-size:11px}
+.form-card{scroll-margin-top:20px}
+@media(prefers-reduced-motion:reduce){.record-card,.mini-button{transition:none!important}}
