@@ -96,14 +96,14 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Meja, kursi, papan tulis, podium, lemari kelas, dan bangku otomatis memilih kategori Perlengkapan Kelas; kategori lama Furniture/Peralatan kelas ikut ditampilkan dalam kelompok itu.
 
 
-## Pembaruan v2.0.0
+## Pembaruan v2.0.1
 - Beranda memakai judul **Akses Cepat**.
 - Empat menu utama ditampilkan sebagai carousel horizontal yang bisa digeser di ponsel.
 - Animasi kartu, ikon mengambang, efek cahaya, dan petunjuk geser ditambahkan; tata letak desktop tetap empat kolom.
-- Cache offline diperbarui ke v2.0.0.
+- Cache offline diperbarui ke v2.0.1.
 
 
-## Versi 2.0.0 — Pengelolaan data
+## Versi 2.0.1 — Pengelolaan data
 - Edit data ruangan, inventaris, dan catatan pemeriksaan.
 - Form edit otomatis terisi data yang tersimpan; perubahan kondisi inventaris tetap dicatat.
 - Arsipkan dan pulihkan data tanpa menghapusnya permanen.
@@ -113,3 +113,9 @@ Paket ini belum otomatis mengubah repositori GitHub atau situs yang sudah dipubl
 - Database lokal dinaikkan ke versi 2 untuk menambahkan penyimpanan audit tanpa menghapus data lama.
 
 Catatan: identitas pada riwayat perubahan berasal dari nama pemeriksa lokal, bukan sistem login terverifikasi. Data tetap tersimpan lokal di browser/perangkat. Buat backup JSON sebelum mengganti versi aplikasi.
+
+
+### v2.0.1 — Perbaikan penyimpanan dan hapus permanen
+- Memperbaiki fungsi pencatatan riwayat perubahan (`TCDB.log`) yang menyebabkan proses simpan berhenti setelah data masuk database.
+- Formulir ruangan dan inventaris sekarang menampilkan status “Menyimpan…” dan menangani kegagalan tanpa mengosongkan formulir.
+- Menambahkan tombol Hapus untuk ruangan, inventaris, dan catatan pemeriksaan, dengan konfirmasi. Ruangan yang masih memiliki inventaris/pemeriksaan terkait tidak bisa dihapus agar relasi data tidak rusak.

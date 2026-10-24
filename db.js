@@ -33,6 +33,10 @@
     get:(store,id)=>request(store,"readonly",s=>s.get(id)),
     put:(store,value)=>request(store,"readwrite",s=>s.put(value)),
     remove:(store,id)=>request(store,"readwrite",s=>s.delete(id)),
+    async log(action,entity,recordId,details={}){
+      const row={id:(crypto.randomUUID?crypto.randomUUID():"audit-"+Date.now()+"-"+Math.random().toString(16).slice(2)),action,entity,recordId,details,by:localStorage.getItem("tc-inspector-name")||"Pemeriksa",at:new Date().toISOString()};
+      return this.put("audit",row);
+    },
     clear:store=>request(store,"readwrite",s=>s.clear()),
     async mergeBackup(data){
       for(const store of ["rooms","items","inspections","audit"]){
