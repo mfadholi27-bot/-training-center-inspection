@@ -27,6 +27,7 @@
       <button class="menu-link" data-page="rooms"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg></span>Data Ruangan</button>
       <button class="menu-link" data-page="inventory"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M8 4v16M16 4v16M3.5 9.3h17M3.5 14.7h17"/></svg></span>Inventaris</button>
       <button class="menu-link" data-page="inspection"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19.5 6.5"/></svg></span>Pemeriksaan</button>
+      <button class="menu-link" data-page="movements"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></svg></span>Mutasi Inventaris</button>
       <button class="menu-link" data-page="history"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v5.8l4 2.3"/></svg></span>Riwayat</button>
       <button class="menu-link" data-page="settings"><span class="menu-glyph"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 13.5a7.4 7.4 0 0 0 0-3l1.5-1.1-1.7-2.9-1.7.7a7.5 7.5 0 0 0-2.5-1.4L14.3 4h-3.4l-.3 1.8a7.5 7.5 0 0 0-2.5 1.4l-1.7-.7-1.7 2.9L6.2 10.5a7.4 7.4 0 0 0 0 3l-1.5 1.1 1.7 2.9 1.7-.7a7.5 7.5 0 0 0 2.5 1.4l.3 1.8h3.4l.3-1.8a7.5 7.5 0 0 0 2.5-1.4l1.7.7 1.7-2.9z"/></svg></span>Pengaturan &amp; Backup</button>
       <p class="menu-footer">OFFLINE FIRST · DATA DI PERANGKAT</p>
@@ -100,6 +101,26 @@
         </form>
       </section>
 
+      <section class="page" id="page-movements" data-title="Mutasi Inventaris">
+        <p class="eyebrow">ASSET MOVEMENT TRACKER</p><h2 class="page-title">Mutasi Inventaris</h2><p class="muted">Catat perpindahan barang. Lokasi terkini diperbarui, sedangkan catatan mutasi sebelumnya tetap tersimpan.</p>
+        <form class="glass form-card" id="movementForm"><h3>Catat perpindahan barang</h3>
+          <label>Barang inventaris<select id="movementItem" required><option value="">Pilih barang</option></select></label>
+          <p id="movementItemInfo" class="field-help">Pilih barang untuk melihat lokasi saat ini.</p>
+          <label>Ruangan asal<select id="movementFrom" required><option value="">Pilih ruangan asal</option></select></label>
+          <label>Ruangan tujuan<select id="movementTo" required><option value="">Pilih ruangan tujuan</option></select></label>
+          <label>Tanggal dan waktu perpindahan<input id="movementDate" type="datetime-local" required></label>
+          <label>Alasan perpindahan<select id="movementReason" required><option value="Penataan ruangan">Penataan ruangan</option><option value="Kebutuhan operasional">Kebutuhan operasional</option><option value="Perbaikan">Perbaikan</option><option value="Dipinjamkan">Dipinjamkan</option><option value="Dikembalikan">Dikembalikan</option><option value="Lainnya">Lainnya</option></select></label>
+          <label>Petugas yang memindahkan<input id="movementBy" maxlength="80" required placeholder="Nama petugas"></label>
+          <label>Penerima / penanggung jawab tujuan<input id="movementReceiver" maxlength="80" placeholder="Nama penerima (opsional)"></label>
+          <label>Catatan tambahan<textarea id="movementNote" rows="2" maxlength="1000" placeholder="Nomor surat, kondisi barang, atau catatan lain"></textarea></label>
+          <div class="form-actions"><button class="primary-button" type="submit" id="movementSubmit">Simpan Mutasi →</button></div>
+        </form>
+        <div class="section-heading"><div><p class="eyebrow">JEJAK PERJALANAN</p><h3>Riwayat Mutasi</h3></div></div>
+        <div class="search-wrap"><input id="movementSearch" placeholder="Cari kode, barang, ruangan, petugas, atau tahun…" aria-label="Cari riwayat mutasi"></div>
+        <label class="filter-label">Filter tahun<select id="movementYear"><option value="">Semua tahun</option></select></label>
+        <div id="movementList" class="record-list"></div>
+      </section>
+
       <section class="page" id="page-history" data-title="Riwayat">
         <p class="eyebrow">INSPECTION RECORDS</p><h2 class="page-title">Riwayat Pemeriksaan</h2><p class="muted">Catatan yang tersimpan di perangkat ini.</p>
         <label class="archive-toggle"><input id="showArchivedInspections" type="checkbox"> Tampilkan arsip pemeriksaan</label><div id="historyList" class="record-list"></div>
@@ -110,7 +131,7 @@
         <div class="glass settings-card"><div><h3>Nama pemeriksa</h3><p class="muted">Digunakan sebagai nama awal pada formulir.</p></div><form id="profileForm" class="inline-form"><input id="profileName" maxlength="80" placeholder="Nama pemeriksa" required><button class="primary-button" type="submit">Simpan</button></form></div>
         <div class="glass settings-card"><div><h3>Backup data</h3><p class="muted">Ekspor ruangan, inventaris, dan riwayat ke berkas JSON.</p></div><button class="primary-button full-button" id="exportBackup">Ekspor Backup JSON</button></div>
         <div class="glass settings-card"><div><h3>Pulihkan backup</h3><p class="muted">Impor backup JSON. Data yang memiliki ID sama akan diperbarui; data lain tetap ada.</p></div><label class="file-button">Pilih berkas backup<input id="importBackup" type="file" accept=".json,application/json"></label></div>
-        <div class="glass settings-card"><div><h3>Ekspor ke Excel</h3><p class="muted">Nama file otomatis memakai nama pemeriksa dan tanggal ekspor. Excel berisi lembar Inventaris, Ruangan, dan Riwayat Pemeriksaan dengan judul kolom konsisten untuk disalin ke file master.</p></div><button class="primary-button full-button" id="exportExcel">Ekspor Excel + Foto (.xlsx)</button></div>
+        <div class="glass settings-card"><div><h3>Ekspor ke Excel</h3><p class="muted">Nama file otomatis memakai nama pemeriksa dan tanggal ekspor. Excel berisi lembar Inventaris, Ruangan, Riwayat Pemeriksaan, dan Riwayat Mutasi untuk arsip dan audit.</p></div><button class="primary-button full-button" id="exportExcel">Ekspor Excel + Foto (.xlsx)</button></div>
         <div class="glass settings-card"><div><h3>Cadangan arsip foto (opsional)</h3><p class="muted">Opsional: ekspor arsip foto terpisah sebagai cadangan. Foto yang dilampirkan saat menyimpan pemeriksaan disisipkan ke lembar Dokumentasi Foto dalam Excel (.xlsx). Ekspor foto membutuhkan koneksi internet saat pustaka pertama kali dimuat.</p></div><button class="secondary-button full-button" id="exportPhotos">Ekspor Arsip Foto</button></div>
         <div class="glass settings-card"><div><h3>Riwayat perubahan</h3><p class="muted">Catatan perubahan data, arsip, dan pemulihan yang dilakukan di perangkat ini.</p></div><div id="auditList" class="audit-list"><p class="muted">Memuat riwayat…</p></div></div>
         <div class="notice"><strong>Privasi & offline</strong><p>Data tidak dikirim ke server. Hapus data browser atau kehilangan perangkat dapat menghilangkan data lokal. Buat backup secara berkala.</p><p id="offlineStatus">Memeriksa dukungan offline…</p></div>

@@ -1,6 +1,6 @@
 /* Penyimpanan lokal IndexedDB; tidak mengirim data ke server. */
 (function(){
-  const DB_NAME="tc-inspection-local", DB_VERSION=3;
+  const DB_NAME="tc-inspection-local", DB_VERSION=4;
   let dbPromise;
   function openDB(){
     if(dbPromise) return dbPromise;
@@ -9,7 +9,7 @@
       const req=indexedDB.open(DB_NAME,DB_VERSION);
       req.onupgradeneeded=()=>{
         const db=req.result;
-        for(const store of ["rooms","items","inspections","audit"]){
+        for(const store of ["rooms","items","inspections","audit","movements"]){
           if(!db.objectStoreNames.contains(store)) db.createObjectStore(store,{keyPath:"id"});
         }
       };
@@ -39,14 +39,14 @@
     },
     clear:store=>request(store,"readwrite",s=>s.clear()),
     async mergeBackup(data){
-      for(const store of ["rooms","items","inspections","audit"]){
+      for(const store of ["rooms","items","inspections","audit","movements"]){
         if(Array.isArray(data[store])) for(const row of data[store]) if(row&&row.id) await this.put(store,row);
       }
     },
     async snapshot(){
-      const [rooms,items,inspections]=await Promise.all([this.all("rooms"),this.all("items"),this.all("inspections")]);
+      const [rooms,items,inspections,movements]=await Promise.all([this.all("rooms"),this.all("items"),this.all("inspections"),this.all("movements")]);
       const audit=await this.all("audit");
-      return {app:"Training Center Inspection",version:2,exportedAt:new Date().toISOString(),rooms,items,inspections,audit,settings:{name:localStorage.getItem("tc-inspector-name")||""}};
+      return {app:"Training Center Inspection",version:3,exportedAt:new Date().toISOString(),rooms,items,inspections,movements,audit,settings:{name:localStorage.getItem("tc-inspector-name")||""}};
     }
   };
 })();

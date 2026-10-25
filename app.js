@@ -1,7 +1,7 @@
 (()=>{"use strict";
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const state={page:"home",history:["home"],busy:false,editingRoom:null,editingItem:null,editingInspection:null};
-const labels={home:"Beranda",rooms:"Data Ruangan",inventory:"Inventaris",inspection:"Pemeriksaan",history:"Riwayat",settings:"Pengaturan & Backup"};
+const labels={home:"Beranda",rooms:"Data Ruangan",inventory:"Inventaris",inspection:"Pemeriksaan",movements:"Mutasi Inventaris",history:"Riwayat",settings:"Pengaturan & Backup"};
 let toastTimer;
 function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600)}
 function esc(value=""){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -19,6 +19,7 @@ function showPage(name,fromPop=false){
   closeMenu();window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   if(name==="rooms"||name==="inventory"||name==="history")refresh();
   if(name==="inspection")fillRoomSelects();
+  if(name==="movements")loadMovementForm().then(renderMovements);
 }
 function openMenu(){const m=$("#sideMenu");m.classList.add("open");m.setAttribute("aria-hidden","false");$("#menuOverlay").classList.add("show");$("#menuToggle").setAttribute("aria-expanded","true")}
 function closeMenu(){const m=$("#sideMenu");if(!m)return;m.classList.remove("open");m.setAttribute("aria-hidden","true");$("#menuOverlay").classList.remove("show");$("#menuToggle").setAttribute("aria-expanded","false")}
@@ -28,7 +29,7 @@ $("#profileButton").addEventListener("click",()=>{showPage("settings");$("#profi
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
 let touchStart=null;
 document.addEventListener("touchstart",e=>{if(e.touches.length===1)touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
-document.addEventListener("touchend",e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;const start=touchStart.x;touchStart=null;if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.25)return;if($("#sideMenu").classList.contains("open")){if(dx<0)closeMenu();return}if(start<24&&dx>90){openMenu();return}const order=["home","rooms","inventory","inspection","history","settings"],i=order.indexOf(state.page);if(dx<0&&i<order.length-1)showPage(order[i+1]);else if(dx>0&&i>0)showPage(order[i-1]);},{passive:true});
+document.addEventListener("touchend",e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;const start=touchStart.x;touchStart=null;if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.25)return;if($("#sideMenu").classList.contains("open")){if(dx<0)closeMenu();return}if(start<24&&dx>90){openMenu();return}const order=["home","rooms","inventory","inspection","movements","history","settings"],i=order.indexOf(state.page);if(dx<0&&i<order.length-1)showPage(order[i+1]);else if(dx>0&&i>0)showPage(order[i-1]);},{passive:true});
 window.addEventListener("popstate",()=>{const previous=state.history.pop()||"home";showPage(previous,true)});
 
 async function refresh(){
@@ -209,6 +210,57 @@ document.addEventListener("click",async e=>{
  if(b.dataset.deleteItem){await deleteRecord("items",b.dataset.deleteItem,"Inventaris");return}
  if(b.dataset.deleteInspection){await deleteRecord("inspections",b.dataset.deleteInspection,"Pemeriksaan");return}
 });
+function localDateTimeValue(d=new Date()) { const pad=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+async function loadMovementForm(){
+ const [items,rooms]=await Promise.all([TCDB.all("items"),TCDB.all("rooms")]);
+ const activeItems=items.filter(i=>!i.archivedAt).sort((a,b)=>(a.name||"").localeCompare(b.name||"","id",{numeric:true}));
+ const activeRooms=rooms.filter(r=>!r.archivedAt).sort((a,b)=>(a.name||"").localeCompare(b.name||"","id"));
+ const itemSelect=$("#movementItem"),prevItem=itemSelect.value;
+ itemSelect.innerHTML='<option value="">Pilih barang</option>'+activeItems.map(i=>`<option value="${esc(i.id)}">${esc(i.name)} · ${esc(i.code||"Tanpa kode")}</option>`).join("");
+ if(activeItems.some(i=>i.id===prevItem))itemSelect.value=prevItem;
+ const opts=activeRooms.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
+ const from=$("#movementFrom"),to=$("#movementTo"),oldFrom=from.value,oldTo=to.value;
+ from.innerHTML='<option value="">Pilih ruangan asal</option>'+opts;to.innerHTML='<option value="">Pilih ruangan tujuan</option>'+opts;
+ if(activeRooms.some(r=>r.id===oldFrom))from.value=oldFrom;if(activeRooms.some(r=>r.id===oldTo))to.value=oldTo;
+ $("#movementDate").value=localDateTimeValue();$("#movementBy").value=localStorage.getItem("tc-inspector-name")||"";
+ updateMovementItemInfo();
+}
+async function updateMovementItemInfo(){
+ const item=await TCDB.get("items",$("#movementItem").value);if(!item){$("#movementItemInfo").textContent="Pilih barang untuk melihat lokasi saat ini.";return}
+ const rooms=await TCDB.all("rooms"),room=rooms.find(r=>r.id===item.roomId);
+ $("#movementItemInfo").textContent=`Kode: ${item.code||"Tanpa kode"} · Kategori: ${item.category||"Lainnya"} · Lokasi saat ini: ${room?.name||"Belum ditentukan"} · Kondisi: ${item.condition||"Belum dicatat"}`;
+ if(item.roomId)$("#movementFrom").value=item.roomId;
+}
+$("#movementItem").addEventListener("change",updateMovementItemInfo);
+$("#movementForm").addEventListener("submit",async e=>{
+ e.preventDefault();if(state.busy)return;state.busy=true;const btn=$("#movementSubmit");btn.disabled=true;btn.textContent="Menyimpan…";
+ try{
+  const item=await TCDB.get("items",$("#movementItem").value);if(!item||item.archivedAt){toast("Pilih inventaris aktif yang valid.");return}
+  const fromId=$("#movementFrom").value,toId=$("#movementTo").value;
+  if(fromId===toId){toast("Ruangan asal dan tujuan harus berbeda.");return}
+  if((item.roomId||"")!==fromId){toast("Ruangan asal tidak sesuai lokasi terkini barang. Muat ulang pilihan barang.");return}
+  const [rooms,allMovements]=await Promise.all([TCDB.all("rooms"),TCDB.all("movements")]);
+  const roomMap=new Map(rooms.map(r=>[r.id,r.name]));
+  const at=new Date($("#movementDate").value).toISOString(),now=new Date().toISOString();
+  const row={id:id(),itemId:item.id,itemCode:item.code||"",itemName:item.name||"",itemCategory:item.category||"Lainnya",fromRoomId:fromId,fromRoomName:roomMap.get(fromId)||"",toRoomId:toId,toRoomName:roomMap.get(toId)||"",reason:$("#movementReason").value,by:$("#movementBy").value.trim(),receiver:$("#movementReceiver").value.trim(),note:$("#movementNote").value.trim(),conditionAtMove:item.condition||"",at,createdAt:now};
+  await TCDB.put("movements",row);
+  item.roomId=toId;item.updatedAt=now;item.locationUpdatedAt=at;await TCDB.put("items",item);
+  await TCDB.log("MUTASI","Inventaris",item.id,{name:item.name,code:item.code,from:row.fromRoomName,to:row.toRoomName,movementId:row.id});
+  $("#movementForm").reset();await loadMovementForm();await refresh();await renderMovements();toast(`Mutasi tersimpan: ${row.itemName} dipindahkan ke ${row.toRoomName}.`);
+ }catch(err){console.error(err);toast("Mutasi gagal disimpan. Periksa data lalu coba lagi.")}
+ finally{state.busy=false;btn.disabled=false;btn.textContent="Simpan Mutasi →"}
+});
+$("#movementSearch").addEventListener("input",renderMovements);$("#movementYear").addEventListener("change",renderMovements);
+async function renderMovements(){
+ const el=$("#movementList");if(!el)return;
+ const [movements,items,rooms]=await Promise.all([TCDB.all("movements"),TCDB.all("items"),TCDB.all("rooms")]);
+ const roomMap=new Map(rooms.map(r=>[r.id,r.name])),itemMap=new Map(items.map(i=>[i.id,i]));
+ const years=[...new Set(movements.map(m=>String(new Date(m.at).getFullYear())))].filter(y=>y!=="NaN").sort((a,b)=>b.localeCompare(a));
+ const yearSelect=$("#movementYear"),previous=yearSelect.value;yearSelect.innerHTML='<option value="">Semua tahun</option>'+years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join("");if(years.includes(previous))yearSelect.value=previous;
+ const q=($("#movementSearch").value||"").trim().toLowerCase(),year=yearSelect.value;
+ const rows=movements.filter(m=>!year||String(new Date(m.at).getFullYear())===year).filter(m=>[m.itemName,m.itemCode,m.fromRoomName,m.toRoomName,m.reason,m.by,m.receiver,m.note].join(" ").toLowerCase().includes(q)).sort((a,b)=>new Date(b.at)-new Date(a.at));
+ el.innerHTML=rows.length?rows.map(m=>{const current=itemMap.get(m.itemId);return `<article class="record-card glass"><div class="record-icon">⇄</div><div class="record-main"><h3>${esc(m.itemName)} · ${esc(m.itemCode||"Tanpa kode")}</h3><p><strong>${esc(m.fromRoomName||roomMap.get(m.fromRoomId)||"Lokasi tidak diketahui")}</strong> → <strong>${esc(m.toRoomName||roomMap.get(m.toRoomId)||"Lokasi tidak diketahui")}</strong></p><p>${esc(m.itemCategory||"Lainnya")} · ${esc(m.reason||"Tanpa alasan")}</p><div class="record-meta">${dateLabel(m.at)} · Petugas: ${esc(m.by||"Tidak dicatat")}${m.receiver?` · Penerima: ${esc(m.receiver)}`:""}</div>${m.note?`<p>${esc(m.note)}</p>`:""}<p class="record-meta">Lokasi barang sekarang: ${esc(roomMap.get(current?.roomId)||"Belum ditentukan")}</p></div></article>`}).join(""):'<div class="empty-state">Belum ada mutasi yang cocok. Catatan perpindahan akan tampil di sini.</div>';
+}
 async function renderAudit(){const el=$("#auditList");if(!el)return;try{const rows=(await TCDB.all("audit")).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,30);el.innerHTML=rows.length?rows.map(x=>`<div class="audit-row"><strong>${esc(x.action)} · ${esc(x.entity)}</strong><span>${esc(x.details?.name||x.details?.type||"Data diperbarui")}</span><small>${esc(x.by||"Pemeriksa")} · ${dateLabel(x.at)}</small></div>`).join(""):'<p class="muted">Belum ada perubahan yang tercatat.</p>'}catch(e){el.innerHTML='<p class="muted">Riwayat perubahan belum tersedia.</p>'}}
 $("#roomSearch").addEventListener("input",async()=>renderRooms(await TCDB.all("rooms")));
 $("#showArchivedRooms").addEventListener("change",async()=>renderRooms(await TCDB.all("rooms")));
@@ -265,7 +317,7 @@ function photoDataUrlToMime(dataUrl) {
 }
 async function exportXlsxWithPhotos() {
   const XLSX = await loadXLSXLibrary();
-  const [items,rooms,inspections]=await Promise.all([TCDB.all("items"),TCDB.all("rooms"),TCDB.all("inspections")]);
+  const [items,rooms,inspections,movements]=await Promise.all([TCDB.all("items"),TCDB.all("rooms"),TCDB.all("inspections"),TCDB.all("movements")]);
   const roomMap=new Map(rooms.map(r=>[r.id,r]));
   const roomName=id=>roomMap.get(id)?.name||"";
   const dateText=v=>v?new Date(v).toLocaleString("id-ID"):"";
@@ -285,6 +337,7 @@ async function exportXlsxWithPhotos() {
     "Hasil":x.result||"","Catatan Temuan":x.note||"",
     "Foto Tersedia":x.photo?"Ya":"Tidak"
   }));
+  const movementRows=movements.map((m,n)=>({"No":n+1,"Tanggal & Waktu":dateText(m.at),"Kode Barang":m.itemCode||"","Nama Barang":m.itemName||"","Kategori":m.itemCategory||"","Ruangan Asal":m.fromRoomName||roomName(m.fromRoomId),"Ruangan Tujuan":m.toRoomName||roomName(m.toRoomId),"Alasan":m.reason||"","Kondisi Saat Mutasi":m.conditionAtMove||"","Petugas":m.by||"","Penerima":m.receiver||"","Catatan":m.note||""}));
   const photoInspections=inspections.filter(x=>x.photo);
   const photoRows=photoInspections.map((x,n)=>({
     "No":n+1,"Tanggal & Waktu":dateText(x.createdAt),
@@ -297,6 +350,7 @@ async function exportXlsxWithPhotos() {
     ["Inventaris",itemRows,[7,18,28,20,24,18,38,24]],
     ["Ruangan",roomRows,[7,28,26,14,38,24]],
     ["Riwayat Pemeriksaan",inspectionRows,[7,24,22,24,24,18,40,18]],
+    ["Riwayat Mutasi",movementRows,[7,24,18,28,20,24,24,24,20,22,22,40]],
     ["Dokumentasi Foto",photoRows,[7,24,22,24,24,18,40,26]]
   ];
   for(const [name,rows,widths] of specs){
@@ -318,8 +372,14 @@ async function exportXlsxWithPhotos() {
     const addSheet=(name,rows,widths)=>{
       const s=ew.addWorksheet(name,{views:[{state:"frozen",ySplit:1}]});
       if(!rows.length){
-        const keys=specs.find(x=>x[0]===name)?.[1]?.[0] ? Object.keys(specs.find(x=>x[0]===name)[1][0]) : [];
-        s.addRow(keys);
+        const headers={
+          "Inventaris":["No","Kode Barang","Nama Barang","Kategori","Ruangan","Kondisi","Catatan","Terakhir Diperbarui"],
+          "Ruangan":["No","Nama Ruangan","Gedung / Lokasi","Lantai","Catatan","Tanggal Dibuat"],
+          "Riwayat Pemeriksaan":["No","Tanggal & Waktu","Pemeriksa","Ruangan","Jenis Pemeriksaan","Hasil","Catatan Temuan","Foto Tersedia"],
+          "Riwayat Mutasi":["No","Tanggal & Waktu","Kode Barang","Nama Barang","Kategori","Ruangan Asal","Ruangan Tujuan","Alasan","Kondisi Saat Mutasi","Petugas","Penerima","Catatan"],
+          "Dokumentasi Foto":["No","Tanggal & Waktu","Pemeriksa","Ruangan","Jenis Pemeriksaan","Hasil","Catatan","Foto"]
+        };
+        s.addRow(headers[name]||[]);
       } else {
         s.columns=Object.keys(rows[0]).map((header,i)=>({header,key:header,width:widths[i]||18,style:{alignment:{vertical:"top",wrapText:true}}}));
         rows.forEach(r=>s.addRow(r));
@@ -334,6 +394,7 @@ async function exportXlsxWithPhotos() {
     addSheet("Inventaris",itemRows,[7,18,28,20,24,18,38,24]);
     addSheet("Ruangan",roomRows,[7,28,26,14,38,24]);
     addSheet("Riwayat Pemeriksaan",inspectionRows,[7,24,22,24,24,18,40,18]);
+    addSheet("Riwayat Mutasi",movementRows,[7,24,18,28,20,24,24,24,20,22,22,40]);
     const ps=addSheet("Dokumentasi Foto",photoRows,[7,24,22,24,24,18,40,26]);
     ps.getColumn(8).width=22;
     photoInspections.forEach((x,i)=>{
