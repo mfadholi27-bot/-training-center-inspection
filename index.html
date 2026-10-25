@@ -89,7 +89,8 @@
           <label>Nama pemeriksa<input id="inspectorName" required maxlength="80" placeholder="Nama pemeriksa"></label>
           <label>Ruangan<select id="inspectionRoom"><option value="">Pilih ruangan (opsional)</option></select></label>
           <label>Jenis pemeriksaan<select id="inspectionType"><option>Inventaris barang</option><option>Fasilitas ruangan</option><option>Kebersihan ruangan</option><option>Pemeriksaan umum</option></select></label>
-          <label id="inspectionItemWrap">Pilih barang yang diperiksa<select id="inspectionItem" required><option value="">Pilih ruangan terlebih dahulu</option></select></label>
+          <label id="inspectionCategoryWrap">Kategori barang<select id="inspectionCategory"><option value="">Semua kategori</option></select></label>
+          <label id="inspectionItemWrap">Pilih barang yang diperiksa<select id="inspectionItem" required><option value="">Pilih kategori atau barang</option></select></label>
           <p id="inspectionItemHelp" class="field-help">Pilih ruangan untuk menampilkan barang di ruangan tersebut.</p>
           <label>Hasil pemeriksaan<select id="inspectionResult"><option>Baik</option><option>Perlu Perbaikan</option><option>Rusak Ringan</option><option>Rusak Berat</option><option>Tidak Ditemukan</option></select></label>
           <label>Catatan temuan<textarea id="inspectionNote" rows="4" maxlength="1500" placeholder="Jelaskan hasil atau kerusakan yang ditemukan…"></textarea></label>

@@ -67,11 +67,11 @@ function renderItems(items,rooms){
 function renderHistory(inspections,rooms){
  const map=new Map(rooms.map(r=>[r.id,r.name]));inspections.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
  const showArchived=$("#showArchivedInspections")?.checked||false;inspections=inspections.filter(x=>showArchived?!!x.archivedAt:!x.archivedAt);
- $("#historyList").innerHTML=inspections.length?inspections.map(x=>`<article class="record-card glass"><div class="record-icon">✓</div><div class="record-main"><h3>${esc(x.type)} · ${esc(map.get(x.roomId)||"Tanpa ruangan")}</h3><p>Pemeriksa: ${esc(x.inspector)}</p>${x.itemName?`<p>Barang: ${esc(x.itemName)}${x.itemCode?` · ${esc(x.itemCode)}`:""}</p>`:""}<span class="status ${statusClass(x.result)}">${esc(x.result)}</span>${x.note?`<p style="margin-top:8px">${esc(x.note)}</p>`:""}${x.photo?`<details class="history-photo"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 5-5 3 3 2-2 4 4"/></svg><span>Lihat foto dokumentasi</span></summary><img alt="Foto pemeriksaan" loading="lazy" src="${x.photo}"></details>`:`<p class="record-meta">Tidak ada foto dokumentasi</p>`}<div class="record-meta">${dateLabel(x.createdAt)}</div><div class="record-actions"><button class="mini-button" data-edit-inspection="${esc(x.id)}">✏️ Edit</button>${x.archivedAt?`<button class="mini-button" data-restore-inspection="${esc(x.id)}">Pulihkan</button>`:`<button class="mini-button danger" data-archive-inspection="${esc(x.id)}">Arsipkan</button>`}<button class="mini-button danger" data-delete-inspection="${esc(x.id)}">Hapus</button></div></div></article>`).join(""):`<div class="empty-state">Belum ada riwayat pemeriksaan yang tersimpan.</div>`;
+ $("#historyList").innerHTML=inspections.length?inspections.map(x=>`<article class="record-card glass"><div class="record-icon">✓</div><div class="record-main"><h3>${esc(x.type)} · ${esc(x.roomNameSnapshot||map.get(x.roomId)||"Tanpa ruangan")}</h3><p>Pemeriksa: ${esc(x.inspector)}</p>${x.itemName?`<p>Barang: ${esc(x.itemName)}${x.itemCode?` · ${esc(x.itemCode)}`:""}${x.itemCategory?` · Kategori: ${esc(x.itemCategory)}`:""}</p>`:""}<span class="status ${statusClass(x.result)}">${esc(x.result)}</span>${x.note?`<p style="margin-top:8px">${esc(x.note)}</p>`:""}${x.photo?`<details class="history-photo"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m5 17 5-5 3 3 2-2 4 4"/></svg><span>Lihat foto dokumentasi</span></summary><img alt="Foto pemeriksaan" loading="lazy" src="${x.photo}"></details>`:`<p class="record-meta">Tidak ada foto dokumentasi</p>`}<div class="record-meta">${dateLabel(x.createdAt)}</div><div class="record-actions"><button class="mini-button" data-edit-inspection="${esc(x.id)}">✏️ Edit</button>${x.archivedAt?`<button class="mini-button" data-restore-inspection="${esc(x.id)}">Pulihkan</button>`:`<button class="mini-button danger" data-archive-inspection="${esc(x.id)}">Arsipkan</button>`}<button class="mini-button danger" data-delete-inspection="${esc(x.id)}">Hapus</button></div></div></article>`).join(""):`<div class="empty-state">Belum ada riwayat pemeriksaan yang tersimpan.</div>`;
 }
 function renderRecent(inspections,rooms){
  const map=new Map(rooms.map(r=>[r.id,r.name]));const recent=[...inspections.filter(x=>!x.archivedAt)].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,3);
- $("#recentActivity").innerHTML=recent.length?recent.map(x=>`<article class="activity-card glass"><div class="activity-mark">✓</div><div class="activity-body"><strong>${esc(x.type)} · ${esc(map.get(x.roomId)||"Tanpa ruangan")}</strong><p>${esc(x.result)} — ${esc(x.inspector)}</p></div><span class="activity-time">${dateLabel(x.createdAt)}</span></article>`).join(""):`<div class="empty-state">Belum ada aktivitas. Hasil pemeriksaan yang disimpan akan muncul di sini.</div>`;
+ $("#recentActivity").innerHTML=recent.length?recent.map(x=>`<article class="activity-card glass"><div class="activity-mark">✓</div><div class="activity-body"><strong>${esc(x.type)} · ${esc(x.roomNameSnapshot||map.get(x.roomId)||"Tanpa ruangan")}</strong><p>${esc(x.result)} — ${esc(x.inspector)}</p></div><span class="activity-time">${dateLabel(x.createdAt)}</span></article>`).join(""):`<div class="empty-state">Belum ada aktivitas. Hasil pemeriksaan yang disimpan akan muncul di sini.</div>`;
 }
 async function fillRoomSelects(rooms){
  rooms=(rooms||await TCDB.all("rooms")).filter(r=>!r.archivedAt);const opts=rooms.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
@@ -83,14 +83,20 @@ async function fillRoomSelects(rooms){
 async function refreshInspectionItemSelect(selectedId){
  const select=$("#inspectionItem");if(!select)return;
  const type=$("#inspectionType").value,roomId=$("#inspectionRoom").value;
- const visible=type==="Inventaris barang";$("#inspectionItemWrap").classList.toggle("hidden",!visible);$("#inspectionItemHelp").classList.toggle("hidden",!visible);select.required=visible;
+ const visible=type==="Inventaris barang";$("#inspectionItemWrap").classList.toggle("hidden",!visible);$("#inspectionCategoryWrap").classList.toggle("hidden",!visible);$("#inspectionItemHelp").classList.toggle("hidden",!visible);select.required=visible;
  if(!visible){select.innerHTML='<option value="">Tidak terkait barang tertentu</option>';return}
  const [items,rooms]=await Promise.all([TCDB.all("items"),TCDB.all("rooms")]);
  const roomMap=new Map(rooms.map(r=>[r.id,r.name]));
- const list=items.filter(i=>!i.archivedAt&&(!roomId||i.roomId===roomId)).sort((a,b)=>(a.name||"").localeCompare(b.name||"","id",{numeric:true}));
+ const roomItems=items.filter(i=>!i.archivedAt&&(!roomId||i.roomId===roomId));
+ const categorySelect=$("#inspectionCategory"),previousCategory=categorySelect.value;
+ const categories=[...new Set(roomItems.map(i=>(i.category||"Lainnya").trim()||"Lainnya"))].sort((a,b)=>a.localeCompare(b,"id"));
+ categorySelect.innerHTML='<option value="">Semua kategori</option>'+categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+ if(categories.includes(previousCategory))categorySelect.value=previousCategory;
+ const category=categorySelect.value;
+ const list=roomItems.filter(i=>!category||(i.category||"Lainnya").trim()===category).sort((a,b)=>(a.name||"").localeCompare(b.name||"","id",{numeric:true}));
  select.innerHTML='<option value="">Pilih barang yang diperiksa</option>'+list.map(i=>`<option value="${esc(i.id)}">${esc(i.name)}${i.code?` · ${esc(i.code)}`:""} — ${esc(roomMap.get(i.roomId)||"Tanpa ruangan")}</option>`).join("");
  if(selectedId)select.value=selectedId;
- $("#inspectionItemHelp").textContent=list.length?`${list.length} barang tersedia${roomId?" di ruangan terpilih":""}.`:(roomId?"Belum ada inventaris aktif di ruangan ini. Tambahkan barang terlebih dahulu.":"Belum ada inventaris aktif. Tambahkan barang terlebih dahulu.");
+ $("#inspectionItemHelp").textContent=list.length?`${list.length} barang ditampilkan${category?` dalam kategori ${category}`:" dari semua kategori"}${roomId?" di ruangan terpilih":""}.`:(roomItems.length?"Tidak ada barang pada kategori ini.":(roomId?"Belum ada inventaris aktif di ruangan ini. Tambahkan barang terlebih dahulu.":"Belum ada inventaris aktif. Tambahkan barang terlebih dahulu."));
 }
 function resetRoomForm(){state.editingRoom=null;$("#roomForm").reset();$("#roomFormTitle").textContent="Ruangan baru";$("#roomForm").classList.add("hidden");$("#roomForm").querySelector('button[type="submit"]').textContent="Simpan Ruangan"}
 function resetItemForm(){state.editingItem=null;$("#itemForm").reset();$("#itemFormTitle").textContent="Barang inventaris";$("#bulkRangeFields").classList.toggle("hidden",!$("#bulkItemMode").checked);$("#singleItemCodeField").classList.toggle("hidden",$("#bulkItemMode").checked);$("#itemForm").classList.add("hidden");$("#itemForm").querySelector('button[type="submit"]').textContent="Simpan Barang"}
@@ -104,6 +110,7 @@ $("#itemName").addEventListener("input",e=>{const n=e.target.value.toLowerCase()
 $("#bulkItemMode").addEventListener("change",()=>{const bulk=$("#bulkItemMode").checked;$("#bulkRangeFields").classList.toggle("hidden",!bulk);$("#singleItemCodeField").classList.toggle("hidden",bulk);$("#itemCode").required=false;});
 $("#inspectionRoom").addEventListener("change",()=>refreshInspectionItemSelect());
 $("#inspectionType").addEventListener("change",()=>refreshInspectionItemSelect());
+$("#inspectionCategory").addEventListener("change",()=>refreshInspectionItemSelect());
 $("#itemForm").addEventListener("submit",async e=>{
  e.preventDefault();if(state.busy)return;
  const btn=$("#itemForm").querySelector('button[type="submit"]');state.busy=true;btn.disabled=true;btn.textContent="Menyimpan…";
@@ -145,8 +152,10 @@ $("#inspectionForm").addEventListener("submit",async e=>{
   const file=$("#inspectionPhoto").files[0];let photo=state.editingInspection?(await TCDB.get("inspections",state.editingInspection))?.photo||"":"";if(file)photo=await compressImage(file);
   const old=state.editingInspection?await TCDB.get("inspections",state.editingInspection):null,now=new Date().toISOString();
   const selectedItem=selectedItemId?await TCDB.get("items",selectedItemId):null;
-  const roomId=$("#inspectionRoom").value||(selectedItem?.roomId||"");
-  const row={...(old||{}),id:old?.id||id(),inspector:$("#inspectorName").value.trim(),roomId,type,itemId:selectedItem?.id||"",itemName:selectedItem?.name||"",itemCode:selectedItem?.code||"",result:$("#inspectionResult").value,note:$("#inspectionNote").value.trim(),photo,createdAt:old?.createdAt||now,updatedAt:now};
+  const roomId=selectedItem?.roomId||$("#inspectionRoom").value||"";
+  const roomsNow=await TCDB.all("rooms");
+  const roomNameSnapshot=roomsNow.find(r=>r.id===roomId)?.name||"Tanpa ruangan";
+  const row={...(old||{}),id:old?.id||id(),inspector:$("#inspectorName").value.trim(),roomId,roomNameSnapshot,type,itemId:selectedItem?.id||"",itemName:selectedItem?.name||"",itemCode:selectedItem?.code||"",itemCategory:selectedItem?.category||"",result:$("#inspectionResult").value,note:$("#inspectionNote").value.trim(),photo,createdAt:old?.createdAt||now,updatedAt:now};
   if(!row.inspector){toast("Nama pemeriksa wajib diisi.");return}
   await TCDB.put("inspections",row);try{await TCDB.log(old?"EDIT":"TAMBAH","Pemeriksaan",row.id,{type:row.type,result:row.result,itemName:row.itemName})}catch(logErr){console.warn("Riwayat perubahan tidak tersimpan",logErr)}
   resetInspectionEdit();await refresh();toast(old?"Pemeriksaan diperbarui.":"Pemeriksaan tersimpan di perangkat.");showPage("history");
