@@ -119,7 +119,7 @@ function updateDistributionTotal(){
  const assigned=Array.from(document.querySelectorAll("[data-distribution-room]")).reduce((sum,input)=>sum+(Math.max(0,Number(input.value)||0)),0);
  const start=Number($("#itemNumberStart").value),end=Number($("#itemNumberEnd").value);
  const expected=Number.isInteger(start)&&Number.isInteger(end)&&start>0&&end>=start?end-start+1:0;
- $("#distributionTotal").textContent=assigned;$("#distributionExpected").textContent=expected;
+ $("#distributionTotal").textContent=assigned;$("#distributionExpected").textContent=expected;$("#itemSingleRoomWrap").classList.toggle("hidden",assigned>0);
  const status=$("#distributionStatus");
  status.textContent=assigned===0?"Belum ada pembagian; semua barang akan masuk ke ruangan pilihan tunggal.":assigned===expected?"Jumlah pembagian sudah sesuai.":"Jumlah pembagian harus sama dengan total barang.";
  status.classList.toggle("distribution-valid",assigned===expected&&assigned>0);
@@ -145,7 +145,7 @@ $("#itemForm").addEventListener("submit",async e=>{
    if(end-start+1>200){toast("Maksimal 200 barang dalam satu kali simpan.");return}
    const requested=end-start+1;
    const allocationInputs=Array.from(document.querySelectorAll("[data-distribution-room]"));
-   const allocation=allocationInputs.map(input=>({roomId:input.dataset.distributionRoom,count:Number(input.value)||0})).filter(x=>x.count>0);
+   if(allocationInputs.some(input=>!Number.isInteger(Number(input.value))||Number(input.value)<0)){toast("Jumlah per ruangan harus berupa bilangan bulat 0 atau lebih.");return} const allocation=allocationInputs.map(input=>({roomId:input.dataset.distributionRoom,count:Number(input.value)||0})).filter(x=>x.count>0);
    const allocationTotal=allocation.reduce((sum,x)=>sum+x.count,0);
    if(allocation.length&&allocationTotal!==requested){toast(`Jumlah pembagian (${allocationTotal}) harus sama dengan total barang (${requested}).`);return}
    if(!allocation.length&&!$("#itemRoom").value){toast("Pilih satu ruangan atau isi pembagian ke beberapa ruangan.");return}
