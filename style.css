@@ -153,3 +153,7 @@
 .record-actions .mini-button{min-height:34px;padding:8px 11px;font-size:11px}
 .form-card{scroll-margin-top:20px}
 @media(prefers-reduced-motion:reduce){.record-card,.mini-button{transition:none!important}}
+
+
+/* v2.2.0 app release marker */
+.build-stamp{color:#9dbaff;font-size:9px;letter-spacing:.35px;text-align:right}.app-release-card{border-color:#779cff35;background:linear-gradient(135deg,#7199ff12,#9c7aff08)}.release-time{font-size:11px;color:#a9c8ff;margin:10px 0 6px;font-weight:700}.release-note{font-size:11px;line-height:1.6;color:#aebbd5;margin:0}
