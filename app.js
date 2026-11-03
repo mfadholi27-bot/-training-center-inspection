@@ -290,8 +290,18 @@ function applyName(name){localStorage.setItem("tc-inspector-name",name);$("#hell
 applyName(localStorage.getItem("tc-inspector-name")||"Pemeriksa");
 $("#profileForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("#profileName").value.trim();applyName(name);await TCDB.log("UBAH PENGATURAN","Profil","inspector",{name});await renderAudit();toast("Nama pemeriksa disimpan.")});
 function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
-$("#exportBackup").addEventListener("click",async()=>{try{const data=await TCDB.snapshot();download("backup-training-center-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(data,null,2),"application/json");toast("Backup berhasil dibuat.")}catch(e){toast("Backup gagal dibuat.")}});
-$("#importBackup").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data||!Array.isArray(data.rooms)||!Array.isArray(data.items)||!Array.isArray(data.inspections))throw new Error("Format backup tidak cocok");if(!confirm("Impor data backup? Data dengan ID sama akan diperbarui."))return;await TCDB.mergeBackup(data);await TCDB.log("PULIHKAN BACKUP","Sistem","backup",{name:file.name});if(data.settings?.name)applyName(data.settings.name);await refresh();toast("Backup berhasil dipulihkan.")}catch(err){toast("Backup tidak valid atau gagal dibaca.")}finally{e.target.value=""}});
+async function renderAutoBackupStatus(){
+ const el=$("#autoBackupStatus");if(!el)return;
+ try{const rows=(await TCDB.listBackups()).sort((a,b)=>new Date(b.at)-new Date(a.at));
+ el.innerHTML=rows.length?"<strong>Backup terakhir:</strong> "+dateLabel(rows[0].at)+"<br><span>"+rows.length+" dari maksimal 4 cadangan tersimpan di perangkat ini.</span>":"Belum ada backup otomatis.";
+ }catch(e){el.textContent="Status backup belum tersedia."}
+}
+$("#exportBackup").addEventListener("click",async()=>{try{const data=await TCDB.snapshot();download("backup-training-center-"+new Date().toISOString().replace(/[:.]/g,"-")+".json",JSON.stringify(data,null,2),"application/json");toast("Backup JSON berhasil diunduh.")}catch(e){toast("Backup gagal dibuat.")}});
+TCDB.autoBackupNow().then(renderAutoBackupStatus).catch(e=>{console.warn(e);const el=$("#autoBackupStatus");if(el)el.textContent="Backup otomatis gagal. Pastikan ruang penyimpanan tersedia."});
+setInterval(renderAutoBackupStatus,30000);
+window.addEventListener("pagehide",()=>{TCDB.autoBackupNow().catch(()=>{})});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")TCDB.autoBackupNow().then(renderAutoBackupStatus).catch(()=>{})});
+$("#importBackup").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data||!Array.isArray(data.rooms)||!Array.isArray(data.items)||!Array.isArray(data.inspections))throw new Error("Format backup tidak cocok");if(!confirm("Impor data backup? Data dengan ID sama akan diperbarui."))return;await TCDB.mergeBackup(data);await TCDB.autoBackupNow();await TCDB.log("PULIHKAN BACKUP","Sistem","backup",{name:file.name});if(data.settings?.name)applyName(data.settings.name);await refresh();toast("Backup berhasil dipulihkan.")}catch(err){toast("Backup tidak valid atau gagal dibaca.")}finally{e.target.value=""}});
 function safeFilePart(value) {
   return String(value || "Pemeriksa")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
