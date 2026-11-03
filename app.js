@@ -100,7 +100,7 @@ async function refreshInspectionItemSelect(selectedId){
  $("#inspectionItemHelp").textContent=list.length?`${list.length} barang ditampilkan${category?` dalam kategori ${category}`:" dari semua kategori"}${roomId?" di ruangan terpilih":""}.`:(roomItems.length?"Tidak ada barang pada kategori ini.":(roomId?"Belum ada inventaris aktif di ruangan ini. Tambahkan barang terlebih dahulu.":"Belum ada inventaris aktif. Tambahkan barang terlebih dahulu."));
 }
 function resetRoomForm(){state.editingRoom=null;$("#roomForm").reset();$("#roomFormTitle").textContent="Ruangan baru";$("#roomForm").classList.add("hidden");$("#roomForm").querySelector('button[type="submit"]').textContent="Simpan Ruangan"}
-function resetItemForm(){state.editingItem=null;$("#itemForm").reset();$("#itemFormTitle").textContent="Barang inventaris";$("#bulkRangeFields").classList.toggle("hidden",!$("#bulkItemMode").checked);$("#singleItemCodeField").classList.toggle("hidden",$("#bulkItemMode").checked);$("#itemForm").classList.add("hidden");$("#itemForm").querySelector('button[type="submit"]').textContent="Simpan Barang"}
+function resetItemForm(){state.editingItem=null;$("#itemForm").reset();$("#itemFormTitle").textContent="Barang inventaris";$("#bulkRangeFields").classList.toggle("hidden",!$("#bulkItemMode").checked);$("#distributionPanel").classList.add("hidden");$("#distributionList").innerHTML="";$("#distributionTotal").textContent="0";$("#distributionExpected").textContent="0";$("#distributionStatus").textContent="Isi jumlah barang per ruangan jika ingin membagi ke beberapa ruangan.";$("#singleItemCodeField").classList.toggle("hidden",$("#bulkItemMode").checked);$("#itemForm").classList.add("hidden");$("#itemForm").querySelector('button[type="submit"]').textContent="Simpan Barang"}
 function resetInspectionEdit(){state.editingInspection=null;$("#inspectionForm").reset();$("#inspectionFormTitle").textContent="Catat pemeriksaan";$("#inspectionSubmit").innerHTML='Simpan Pemeriksaan <span>→</span>';$("#cancelInspectionEdit").classList.add("hidden");$("#inspectorName").value=localStorage.getItem("tc-inspector-name")||""}
 $("#addRoomBtn").addEventListener("click",()=>{if(!$("#roomForm").classList.contains("hidden")){resetRoomForm();return}resetRoomForm();$("#roomForm").classList.remove("hidden");$("#roomName").focus()});
 $("#addItemBtn").addEventListener("click",async()=>{await fillRoomSelects();if(!$("#itemForm").classList.contains("hidden")){resetItemForm();return}resetItemForm();$("#itemForm").classList.remove("hidden");$("#itemName").focus()});
@@ -108,7 +108,27 @@ $$("[data-cancel]").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.canc
 $("#cancelInspectionEdit").addEventListener("click",resetInspectionEdit);
 $("#roomForm").addEventListener("submit",async e=>{e.preventDefault();if(state.busy)return;const btn=$("#roomForm").querySelector('button[type="submit"]');state.busy=true;btn.disabled=true;const original=state.editingRoom?"Simpan Perubahan":"Simpan Ruangan";btn.textContent="Menyimpan…";try{const now=new Date().toISOString(),old=state.editingRoom?await TCDB.get("rooms",state.editingRoom):null,row={...(old||{}),id:old?.id||id(),name:$("#roomName").value.trim(),building:$("#roomBuilding").value.trim(),floor:$("#roomFloor").value.trim(),createdAt:old?.createdAt||now,updatedAt:now};if(!row.name){toast("Nama ruangan wajib diisi.");return}const rooms=await TCDB.all("rooms");if(rooms.some(r=>r.id!==row.id&&!r.archivedAt&&r.name.trim().toLowerCase()===row.name.toLowerCase())){toast("Nama ruangan sudah digunakan.");return}await TCDB.put("rooms",row);await TCDB.log(old?"EDIT":"TAMBAH","Ruangan",row.id,{name:row.name});resetRoomForm();await refresh();toast(old?"Perubahan ruangan disimpan.":"Ruangan berhasil disimpan.")}catch(err){console.error(err);toast("Gagal menyimpan ruangan. Data tetap di formulir; coba lagi.")}finally{state.busy=false;btn.disabled=false;if(!$("#roomForm").classList.contains("hidden"))btn.textContent=state.editingRoom?"Simpan Perubahan":"Simpan Ruangan"}});
 $("#itemName").addEventListener("input",e=>{const n=e.target.value.toLowerCase();if(/\b(meja|kursi|papan tulis|whiteboard|podium|lemari kelas|meja guru|bangku)\b/.test(n))$("#itemCategory").value="Perlengkapan Kelas";});
-$("#bulkItemMode").addEventListener("change",()=>{const bulk=$("#bulkItemMode").checked;$("#bulkRangeFields").classList.toggle("hidden",!bulk);$("#singleItemCodeField").classList.toggle("hidden",bulk);$("#itemCode").required=false;});
+async function renderDistributionInputs(){
+ const rooms=(await TCDB.all("rooms")).filter(r=>!r.archivedAt).sort((a,b)=>(a.name||"").localeCompare(b.name||"","id"));
+ const list=$("#distributionList");
+ if(!rooms.length){list.innerHTML='<p class="field-help">Belum ada ruangan aktif. Tambahkan ruangan terlebih dahulu.</p>';return}
+ list.innerHTML=rooms.map(r=>`<label class="distribution-row"><span>${esc(r.name)}</span><input type="number" min="0" max="200" step="1" value="0" inputmode="numeric" data-distribution-room="${esc(r.id)}" aria-label="Jumlah barang di ${esc(r.name)}"></label>`).join("");
+ updateDistributionTotal();
+}
+function updateDistributionTotal(){
+ const assigned=Array.from(document.querySelectorAll("[data-distribution-room]")).reduce((sum,input)=>sum+(Math.max(0,Number(input.value)||0)),0);
+ const start=Number($("#itemNumberStart").value),end=Number($("#itemNumberEnd").value);
+ const expected=Number.isInteger(start)&&Number.isInteger(end)&&start>0&&end>=start?end-start+1:0;
+ $("#distributionTotal").textContent=assigned;$("#distributionExpected").textContent=expected;
+ const status=$("#distributionStatus");
+ status.textContent=assigned===0?"Belum ada pembagian; semua barang akan masuk ke ruangan pilihan tunggal.":assigned===expected?"Jumlah pembagian sudah sesuai.":"Jumlah pembagian harus sama dengan total barang.";
+ status.classList.toggle("distribution-valid",assigned===expected&&assigned>0);
+ status.classList.toggle("distribution-invalid",assigned>0&&assigned!==expected);
+}
+$("#bulkItemMode").addEventListener("change",async()=>{const bulk=$("#bulkItemMode").checked;$("#bulkRangeFields").classList.toggle("hidden",!bulk);$("#singleItemCodeField").classList.toggle("hidden",bulk);$("#distributionPanel").classList.toggle("hidden",!bulk);$("#itemCode").required=false;if(bulk)await renderDistributionInputs();});
+$("#distributionList").addEventListener("input",updateDistributionTotal);
+$("#itemNumberStart").addEventListener("input",updateDistributionTotal);
+$("#itemNumberEnd").addEventListener("input",updateDistributionTotal);
 $("#inspectionRoom").addEventListener("change",()=>refreshInspectionItemSelect());
 $("#inspectionType").addEventListener("change",()=>refreshInspectionItemSelect());
 $("#inspectionCategory").addEventListener("change",()=>refreshInspectionItemSelect());
@@ -123,15 +143,29 @@ $("#itemForm").addEventListener("submit",async e=>{
    const start=Number($("#itemNumberStart").value),end=Number($("#itemNumberEnd").value);
    if(!Number.isInteger(start)||!Number.isInteger(end)||start<1||end<start){toast("Periksa nomor awal dan nomor akhir.");return}
    if(end-start+1>200){toast("Maksimal 200 barang dalam satu kali simpan.");return}
+   const requested=end-start+1;
+   const allocationInputs=Array.from(document.querySelectorAll("[data-distribution-room]"));
+   const allocation=allocationInputs.map(input=>({roomId:input.dataset.distributionRoom,count:Number(input.value)||0})).filter(x=>x.count>0);
+   const allocationTotal=allocation.reduce((sum,x)=>sum+x.count,0);
+   if(allocation.length&&allocationTotal!==requested){toast(`Jumlah pembagian (${allocationTotal}) harus sama dengan total barang (${requested}).`);return}
+   if(!allocation.length&&!$("#itemRoom").value){toast("Pilih satu ruangan atau isi pembagian ke beberapa ruangan.");return}
+   const rooms=await TCDB.all("rooms"),roomMap=new Map(rooms.map(r=>[r.id,r.name]));
+   const assignments=[];
+   if(allocation.length){for(const part of allocation)for(let k=0;k<part.count;k++)assignments.push(part.roomId)}
+   else for(let k=0;k<requested;k++)assignments.push($("#itemRoom").value);
    const existingNames=new Set(items.filter(i=>!i.archivedAt).map(i=>(i.name||"").trim().toLowerCase()));
    const existingCodes=new Set(items.map(i=>(i.code||"").toLowerCase()));let created=0,skipped=0;
+   const distributionSummary={};
    for(let n=start;n<=end;n++){
     const numberedName=`${name} ${String(n).padStart(2,"0")}`;
+    const roomId=assignments[n-start]||"";
     if(existingNames.has(numberedName.toLowerCase())){skipped++;continue}
     let code;do{code="TC-"+String(Date.now()).slice(-6)+String(Math.floor(Math.random()*90+10))}while(existingCodes.has(code.toLowerCase()));existingCodes.add(code.toLowerCase());
-    const row={id:id(),name:numberedName,code,category:$("#itemCategory").value,roomId:$("#itemRoom").value,condition:$("#itemCondition").value,note:$("#itemNote").value.trim(),conditionHistory:[],createdAt:now,updatedAt:now};
+    const row={id:id(),name:numberedName,code,category:$("#itemCategory").value,roomId,condition:$("#itemCondition").value,note:$("#itemNote").value.trim(),conditionHistory:[],createdAt:now,updatedAt:now};
     await TCDB.put("items",row);created++;existingNames.add(numberedName.toLowerCase());
+    const roomLabel=roomMap.get(roomId)||"Belum ditentukan";distributionSummary[roomLabel]=(distributionSummary[roomLabel]||0)+1;
    }
+   try{await TCDB.log("DISTRIBUSI AWAL","Inventaris",id(),{name,start,end,created,skipped,distribution:distributionSummary})}catch(logErr){console.warn("Log distribusi awal tidak tersimpan",logErr)}
    resetItemForm();await refresh();toast(`${created} barang berhasil ditambahkan${skipped?`; ${skipped} nama sudah ada dilewati`:""}.`);return;
   }
   const manualCode=$("#itemCode").value.trim();let code=manualCode||old?.code||"";
